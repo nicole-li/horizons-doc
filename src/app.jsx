@@ -18,6 +18,7 @@ import {
 } from 'draft-js-buttons';
 
 class HeadlinesPicker extends Component {
+  
   componentDidMount() {
     setTimeout(() => { window.addEventListener('click', this.onWindowClick); });
   }
