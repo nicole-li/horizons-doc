@@ -15,7 +15,13 @@ import {
   OrderedListButton,
   BlockquoteButton,
   CodeBlockButton,
+  AlignBlockCenterButton,
+  AlignBlockDefaultButton,
+  AlignBlockLeftButton,
+  AlignBlockRightButton
 } from 'draft-js-buttons';
+
+import {EditorState, RichUtils} from 'draft-js';
 
 class HeadlinesPicker extends Component {
   componentDidMount() {
@@ -61,6 +67,49 @@ class HeadlinesButton extends Component {
   }
 }
 
+class FontSizeButton extends Component {
+  onClick = () =>
+    // A button can call `onOverrideContent` to replace the content
+    // of the toolbar. This can be useful for displaying sub
+    // menus or requesting additional information from the user.
+    this.props.onOverrideContent(HeadlinesPicker);
+
+  render() {
+    return (
+      <div className='headlineButtonWrapper'>
+        <button onClick={this.onClick} className='headlineButton'>
+          F
+        </button>
+      </div>
+    );
+  }
+}
+
+// class FontPicker extends Component {
+//   constructor(props) {
+//     super(props);
+//     this.state = {
+//       editorState: EditorState.createEmpty()
+//     };
+//     this.onChange = (editorState) => this.setState({editorState});
+//   }
+//
+//   onFontChange = (num) => {
+//     console.log('here', num);
+//     this.onChange(RichUtils.toggleInlineStyle(
+//       this.state.editorState, `FONT_SIZE_40`
+//     ));
+//   }
+//
+//   render() {
+//     return (
+//       <div>
+//         <input onChange={this.onFontChange} type='text' placeholder='font size'/>
+//       </div>
+//     );
+//   }
+// }
+
 const toolbarPlugin = createToolbarPlugin({
   structure: [
     BoldButton,
@@ -72,12 +121,17 @@ const toolbarPlugin = createToolbarPlugin({
     UnorderedListButton,
     OrderedListButton,
     BlockquoteButton,
-    CodeBlockButton
+    CodeBlockButton,
+    AlignBlockCenterButton,
+    AlignBlockDefaultButton,
+    AlignBlockLeftButton,
+    AlignBlockRightButton,
+    FontSizeButton
   ]
 });
 const { Toolbar } = toolbarPlugin;
 const plugins = [toolbarPlugin];
-const text = 'In this editor a toolbar shows up once you select part of the text …';
+const text = 'Write somethings…';
 
 export default class CustomToolbarEditor extends Component {
 
@@ -95,17 +149,34 @@ export default class CustomToolbarEditor extends Component {
     this.editor.focus();
   };
 
+  save = (e) => {
+    fetch('/save', {
+      method: 'POST',
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        content: this.state.editorState,
+        lastEditTime: new Date()
+      })
+    })
+    .then((response) => response.json())
+    .then((responseJson) => console.log(responseJson))
+  }
+
   render() {
     return (
       <div>
         <div className='editor' onClick={this.focus}>
+          <Toolbar />
+          <p/>
+          <Button type='submit'onClick={this.save}/>
           <Editor
             editorState={this.state.editorState}
             onChange={this.onChange}
             plugins={plugins}
             ref={(element) => { this.editor = element; }}
           />
-          <Toolbar />
         </div>
       </div>
     );
