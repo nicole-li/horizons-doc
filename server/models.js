@@ -6,20 +6,20 @@ if(!process.env.MONGODB_URI) throw new Error('uri missing');
 
 mongoose.connect(process.env.MONGODB_URI)
 
-var User = new Schema({
+var userSchema = new Schema({
   username: {
     type: String
   },
   password: {
     type: String
   },
-  docList: {
-    type: Array,
-    default: []
-  }
+  docList: [{
+    type: ObjectId,
+    ref:'Document'
+  }]
 });
 
-var Document = new Schema({
+var documentSchema = new Schema({
   content: {
     type: Array,
     default: []
@@ -27,15 +27,12 @@ var Document = new Schema({
   owner: {
     type: ObjectId,
     required: true,
-    ref: 'users'
+    ref: 'User'
   },
-  collaboratorList: {
-    type: [{
-      type: ObjectId,
-      ref: 'users'
-    }],
-    default: []
-  },
+  collaboratorList: [{
+    type: ObjectId,
+    ref: 'User'
+  }],
   title:{
     type: String,
     default: 'Untitled'
@@ -54,4 +51,9 @@ var Document = new Schema({
     minimize: false
   })
 
-module.exports = mongoose.model({'documents', Document}, {'users', User});
+var User = mongoose.model('User', userSchema);
+var Document = mongoose.model('Document', documentSchema)
+module.exports = {
+  Document : Document,
+  User : User
+};
