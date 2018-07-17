@@ -35,12 +35,12 @@ export default class Login extends React.Component {
     return(
       <div>
         <h2 className="page1">Register</h2>
-        <form className="form">
+        <div className="form">
           <p>Username: <input onChange={(e)=> this.setState({username: e.target.value})} name="username" type="text"/></p>
           <p>Password: <input onChange={(e)=> this.setState({password: e.target.value})} name="password"type="text"/></p>
-          <p>Repeat Password: <input onChange={(e)=> this.setState({passwordRepeat: e.target.value})} name="passwordRepeat" type="text"/></p>
-          <input onClick={this.register} type="submit" className="button" value="Register"/>
-        </form>
+          <p>*Password: <input onChange={(e)=> this.setState({passwordRepeat: e.target.value})} name="passwordRepeat" type="text"/></p>
+          <button onClick={this.register} className="button">Register</button>
+        </div>
         <button className="button" onClick={()=>{this.props.redirect('Login')}}>Login</button>
       </div>
     )
