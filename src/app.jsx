@@ -14,8 +14,10 @@ import {
   UnorderedListButton,
   OrderedListButton,
   BlockquoteButton,
-  CodeBlockButton,
+  CodeBlockButton
 } from 'draft-js-buttons';
+
+import {EditorState, RichUtils} from 'draft-js';
 
 class HeadlinesPicker extends Component {
   
@@ -55,10 +57,60 @@ class HeadlinesButton extends Component {
     return (
       <div className='headlineButtonWrapper'>
         <button onClick={this.onClick} className='headlineButton'>
-          H
+          F
         </button>
       </div>
     );
+  }
+}
+
+const toolbarPlugin = createToolbarPlugin({
+  structure: [
+    BoldButton,
+    ItalicButton,
+    UnderlineButton,
+    CodeButton,
+    Separator,
+    HeadlinesButton,
+    UnorderedListButton,
+    OrderedListButton,
+    BlockquoteButton,
+    CodeBlockButton
+  ]
+});
+const { Toolbar } = toolbarPlugin;
+const plugins = [toolbarPlugin];
+const text = 'Write something…';
+
+export default class CustomToolbarEditor extends Component {
+
+  state = {
+    editorState: createEditorStateWithText(text),
+  };
+
+  onChange = (editorState) => {
+    this.setState({
+      editorState,
+    });
+  };
+
+  focus = () => {
+    this.editor.focus();
+  };
+
+  save = (e) => {
+    fetch('/save', {
+      method: 'POST',
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        content: this.state.editorState,
+        lastEditTime: new Date()
+      })
+    })
+    .then((response) => response.json())
+    .then((responseJson) => console.log(responseJson))
   }
 }
 
@@ -99,7 +151,11 @@ export default class CustomToolbarEditor extends Component {
   render() {
     return (
       <div>
+        <h1>Document Editor</h1>
         <div className='editor' onClick={this.focus}>
+          <Toolbar />
+          <p/>
+          <button type='submit'onClick={this.save}>Save</button>
           <Editor
             editorState={this.state.editorState}
             onChange={this.onChange}
