@@ -1,4 +1,5 @@
 const express = require('express');
+
 const router = express.Router();
 const mongoose = require('mongoose');
 var models = require('./models.js');
@@ -12,10 +13,10 @@ mongoose.connection.on('connected', function(){
 mongoose.connect(process.env.MONGODB_URI);
 
 router.post('/save/:id', (req, res) => {
-  var id=req.params.id;
-  Document.findByIdAndUpdate(id, {content: req.body.content,
-    lastEditTime: req.body.lastEditTime}, function(err, result){
-      if(err){
+  let id = req.params.id;
+  Document.findByIdAndUpdate(id, { content: req.body.content,
+    lastEditTime: req.body.lastEditTime }, function(err, result) {
+      if (err) {
         console.log("Selected Doc cannot be saved because it does not exist");
       }else{
         res.json({success: true})

@@ -19,6 +19,9 @@ import {
 
 import {EditorState, RichUtils} from 'draft-js';
 
+import ReactDOM from 'react-dom';
+import Modal from 'react-modal';
+
 class HeadlinesPicker extends Component {
   componentDidMount() {
     setTimeout(() => { window.addEventListener('click', this.onWindowClick); });
@@ -79,12 +82,27 @@ const toolbarPlugin = createToolbarPlugin({
 });
 const { Toolbar } = toolbarPlugin;
 const plugins = [toolbarPlugin];
-const text = 'Write something…';
+
+const customStyles = {
+  content : {
+    top                   : '50%',
+    left                  : '50%',
+    right                 : 'auto',
+    bottom                : 'auto',
+    marginRight           : '-50%',
+    transform             : 'translate(-50%, -50%)'
+  }
+};
+
+Modal.setAppElement('#App');
 
 export default class CustomToolbarEditor extends Component {
 
   state = {
-    editorState: createEditorStateWithText(text),
+    editorState: createEditorStateWithText(this.props.doc.content),
+    modalIsOpen: false,
+    toUser: '',
+    title: 'Untitled'
   };
 
   onChange = (editorState) => {
@@ -97,7 +115,7 @@ export default class CustomToolbarEditor extends Component {
     this.editor.focus();
   };
 
-  save = (e) => {
+  save = () => {
     fetch('/save', {
       method: 'POST',
       headers: {
@@ -112,19 +130,61 @@ export default class CustomToolbarEditor extends Component {
     .then((responseJson) => console.log(responseJson))
   }
 
-  share = (e) => {
+  openModal = () => {
+    this.setState({modalIsOpen: true});
+  }
 
+  afterOpenModal = () => {
+    // references are now sync'd and can be accessed.
+    this.subtitle.style.color = '#f00';
+  }
+
+  closeModal = () => {
+    this.setState({modalIsOpen: false});
+  }
+
+  share = () => {
+    fetch('/share', {
+      method: 'POST',
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        toUser: this.state.toUser,
+        lastEditTime: new Date()
+      })
+    })
+    .then((response) => response.json())
+    .then((responseJson) => console.log(responseJson))
   }
 
   render() {
     return (
       <div>
         <h1>Document Editor</h1>
+        <input className="title" onChange={(e) => this.setState({title: e.target.value})} value={this.state.title}/>
         <div className="nav">
           <button className="button" onClick={()=>{this.props.redirect('Home')}}>Home</button>
           <button className="button" type='submit'onClick={this.save}>Save</button>
-          <button className="button" type='submit'onClick={this.share}>Share</button>
+          <button className="button" type='submit'onClick={this.openModal}>Share</button>
         </div>
+
+        <Modal
+          isOpen={this.state.modalIsOpen}
+          onAfterOpen={this.afterOpenModal}
+          onRequestClose={this.closeModal}
+          style={customStyles}
+          contentLabel="Example Modal"
+        >
+
+          <h2 ref={subtitle => this.subtitle = subtitle}>Share</h2>
+          <form>
+            <input onChange={(e) => this.setState({toUser: e.target.value})} />
+            <button onClick={this.share}>Share</button>
+            <button onClick={this.closeModal}>Cancel</button>
+          </form>
+        </Modal>
+
         <Toolbar />
         <div className='editor' onClick={this.focus}>
           <Editor
