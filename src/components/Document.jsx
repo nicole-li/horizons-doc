@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 
-
 import Editor, { createEditorStateWithText } from 'draft-js-plugins-editor';
 
 import createToolbarPlugin, { Separator } from 'draft-js-static-toolbar-plugin';
@@ -21,7 +20,6 @@ import {
 import {EditorState, RichUtils} from 'draft-js';
 
 class HeadlinesPicker extends Component {
-
   componentDidMount() {
     setTimeout(() => { window.addEventListener('click', this.onWindowClick); });
   }
@@ -85,9 +83,8 @@ const text = 'Write something…';
 
 export default class CustomToolbarEditor extends Component {
 
-  this.state = {
+  state = {
     editorState: createEditorStateWithText(text),
-    selectedDoc: ''
   };
 
   onChange = (editorState) => {
@@ -101,7 +98,7 @@ export default class CustomToolbarEditor extends Component {
   };
 
   save = (e) => {
-    fetch('/save?id='${this.state.selectedDoc}, {
+    fetch('/save', {
       method: 'POST',
       headers: {
         "Content-Type": "application/json"
@@ -115,14 +112,21 @@ export default class CustomToolbarEditor extends Component {
     .then((responseJson) => console.log(responseJson))
   }
 
+  share = (e) => {
+
+  }
+
   render() {
     return (
       <div>
         <h1>Document Editor</h1>
+        <div className="nav">
+          <button className="button" onClick={()=>{this.props.redirect('Home')}}>Home</button>
+          <button className="button" type='submit'onClick={this.save}>Save</button>
+          <button className="button" type='submit'onClick={this.share}>Share</button>
+        </div>
+        <Toolbar />
         <div className='editor' onClick={this.focus}>
-          <Toolbar />
-          <p/>
-          <button type='submit'onClick={this.save}>Save</button>
           <Editor
             editorState={this.state.editorState}
             onChange={this.onChange}

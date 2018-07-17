@@ -2,9 +2,9 @@
   box-sizing: border-box;
   border: 1px solid #ddd;
   cursor: text;
-  padding: 100px;
+  padding: 10;
   border-radius: 2px;
-  margin-bottom: 2em;
+  margin: 2em;
   box-shadow: inset 0px 1px 8px -3px #ABABAB;
   background: #fefefe;
   min-height: 300px;
@@ -12,6 +12,27 @@
 
 .editor :global(.public-DraftEditor-content) {
   min-height: 300px;
+  overflow: auto;
+}
+
+.buttonWrapper {
+  display: inline-block;
+}
+
+.button {
+  background: #fbfbfb;
+  color: #888;
+  font-size: 18px;
+  border: solid 1px;
+  padding-top: 5px;
+  vertical-align: bottom;
+  height: auto;
+  width: auto;
+}
+
+.button:hover,
+.button:focus {
+  background: #f3f3f3;
 }
 
 .headlineButtonWrapper {
@@ -32,37 +53,20 @@
 .headlineButton:hover,
 .headlineButton:focus {
   background: #f3f3f3;
-}.editor {
-  box-sizing: border-box;
-  border: 1px solid #ddd;
-  cursor: text;
-  padding: 16px;
-  border-radius: 2px;
-  margin-bottom: 2em;
-  box-shadow: inset 0px 1px 8px -3px #ABABAB;
-  background: #fefefe;
 }
 
-.editor :global(.public-DraftEditor-content) {
-  min-height: 500px;
+h1 {
+  text-align: center;
 }
 
-.headlineButtonWrapper {
-  display: inline-block;
+.nav {
+  display: flex;
+  justify-content: center;
 }
 
-.headlineButton {
-  background: #fbfbfb;
-  color: #888;
-  font-size: 18px;
-  border: 0;
-  padding-top: 5px;
-  vertical-align: bottom;
-  height: 34px;
-  width: 36px;
-}
-
-.headlineButton:hover,
-.headlineButton:focus {
-  background: #f3f3f3;
+.form {
+  border: solid 1px gray;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
