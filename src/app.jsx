@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 
+
 import Editor, { createEditorStateWithText } from 'draft-js-plugins-editor';
 
 import createToolbarPlugin, { Separator } from 'draft-js-static-toolbar-plugin';
@@ -20,6 +21,7 @@ import {
 import {EditorState, RichUtils} from 'draft-js';
 
 class HeadlinesPicker extends Component {
+
   componentDidMount() {
     setTimeout(() => { window.addEventListener('click', this.onWindowClick); });
   }
@@ -83,8 +85,9 @@ const text = 'Write something…';
 
 export default class CustomToolbarEditor extends Component {
 
-  state = {
+  this.state = {
     editorState: createEditorStateWithText(text),
+    selectedDoc: ''
   };
 
   onChange = (editorState) => {
@@ -98,7 +101,7 @@ export default class CustomToolbarEditor extends Component {
   };
 
   save = (e) => {
-    fetch('/save', {
+    fetch('/save?id='${this.state.selectedDoc}, {
       method: 'POST',
       headers: {
         "Content-Type": "application/json"
@@ -111,6 +114,7 @@ export default class CustomToolbarEditor extends Component {
     .then((response) => response.json())
     .then((responseJson) => console.log(responseJson))
   }
+
   render() {
     return (
       <div>
