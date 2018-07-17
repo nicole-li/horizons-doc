@@ -111,14 +111,22 @@ export default class CustomToolbarEditor extends Component {
     .then((response) => response.json())
     .then((responseJson) => console.log(responseJson))
   }
+
+  share = (e) => {
+
+  }
+
   render() {
     return (
       <div>
         <h1>Document Editor</h1>
+        <div className="nav">
+          <button className="button" onClick={()=>{this.props.redirect('Home')}}>Home</button>
+          <button className="button" type='submit'onClick={this.save}>Save</button>
+          <button className="button" type='submit'onClick={this.share}>Share</button>
+        </div>
+        <Toolbar />
         <div className='editor' onClick={this.focus}>
-          <Toolbar />
-          <p/>
-          <button type='submit'onClick={this.save}>Save</button>
           <Editor
             editorState={this.state.editorState}
             onChange={this.onChange}

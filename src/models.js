@@ -40,9 +40,9 @@ var Document = new Schema({
     type: String,
     default: 'Untitled'
   },
-  password: {
-    type: String
-  },
+  // password: {
+  //   type: String
+  // },
   createdTime: {
     type: Date
   },
@@ -54,4 +54,4 @@ var Document = new Schema({
     minimize: false
   })
 
-module.exports = mongoose.model('documents', Document);
+module.exports = mongoose.model({'documents', Document}, {'users', User});
