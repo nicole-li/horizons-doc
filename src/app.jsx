@@ -112,42 +112,6 @@ export default class CustomToolbarEditor extends Component {
     .then((response) => response.json())
     .then((responseJson) => console.log(responseJson))
   }
-}
-
-const toolbarPlugin = createToolbarPlugin({
-  structure: [
-    BoldButton,
-    ItalicButton,
-    UnderlineButton,
-    CodeButton,
-    Separator,
-    HeadlinesButton,
-    UnorderedListButton,
-    OrderedListButton,
-    BlockquoteButton,
-    CodeBlockButton
-  ]
-});
-const { Toolbar } = toolbarPlugin;
-const plugins = [toolbarPlugin];
-const text = 'In this editor a toolbar shows up once you select part of the text …';
-
-export default class CustomToolbarEditor extends Component {
-
-  state = {
-    editorState: createEditorStateWithText(text),
-  };
-
-  onChange = (editorState) => {
-    this.setState({
-      editorState,
-    });
-  };
-
-  focus = () => {
-    this.editor.focus();
-  };
-
   render() {
     return (
       <div>
@@ -162,7 +126,6 @@ export default class CustomToolbarEditor extends Component {
             plugins={plugins}
             ref={(element) => { this.editor = element; }}
           />
-          <Toolbar />
         </div>
       </div>
     );
