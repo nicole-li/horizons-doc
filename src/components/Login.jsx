@@ -8,12 +8,12 @@ export default class Login extends React.Component {
   render(){
     return(
       <div>
-        <h2 className="page1">Login</h2>
-        <form className="form">
+        <h2 className="h2">Login</h2>
+        <div className="form">
           <p>Username: <input type="text"/></p>
           <p>Password: <input type="text"/></p>
           <button className="button">Login</button>
-        </form>
+        </div>
         <button className="button" onClick={()=>{this.props.redirect('Home')}}>Home</button>
         <button className="button" onClick={()=>{this.props.redirect('Register')}}>Register</button>
       </div>
