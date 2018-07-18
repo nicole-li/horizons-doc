@@ -12,7 +12,7 @@ export default class Login extends React.Component {
 
   register = (e) => {
     e.preventDefault;
-    fetch('/register', {
+    fetch('http://localhost:3000/register', {
       method: 'POST',
       data: {
         username: this.state.username,
@@ -37,7 +37,7 @@ export default class Login extends React.Component {
         <h2 className="page1">Register</h2>
         <div className="form">
           <p>Username: <input onChange={(e)=> this.setState({username: e.target.value})} name="username" type="text"/></p>
-          <p>Password: <input onChange={(e)=> this.setState({password: e.target.value})} name="password"type="text"/></p>
+          <p>Password: <input onChange={(e)=> this.setState({password: e.target.value})}  name="password"type="text"/></p>
           <p>*Password: <input onChange={(e)=> this.setState({passwordRepeat: e.target.value})} name="passwordRepeat" type="text"/></p>
           <button onClick={this.register} className="button">Register</button>
         </div>

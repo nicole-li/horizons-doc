@@ -1,3 +1,4 @@
+
 var express = require('express');
 var router = express.Router();
 var models = require('./models.js');
@@ -20,6 +21,7 @@ module.exports = function (passport) {
           status: '500',
           error: 'username exists, try a different name'
         })
+
       } else {
         if(!validateReq(req)) {
           res.json({
@@ -55,41 +57,17 @@ module.exports = function (passport) {
         }
       }
     })
+  })
 
-      var u = new models.User({
-        username: req.body.username,
-        password: req.body.password,
-        docList: []
-      });
-
-      u.save(function(err, user) {
-        if (err) {
-          console.log(err);
-          res.send({
-            success: false,
-            user: u,
-            status: '500',
-            error: err
-          })
-          return;
-        }
-        console.log(user)
-        res.send({
-          success: true,
-          user: u,
-          status: '400'
-        });
-      });
-    });
-  };
 
   // POST Login page
   router.post('/login', passport.authenticate('local'), function(req, res) {
+
     res.json({
       success: true
     });
-    res.json()
-  });
+  })
+
 
   // GET Logout page
   router.get('/logout', function(req, res) {
