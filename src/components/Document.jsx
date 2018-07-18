@@ -103,6 +103,7 @@ export default class CustomToolbarEditor extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      socket: io('http://localhost:3000'),
       modalIsOpen: false,
       toUser: '',
       title: this.props.doc['title']
@@ -114,14 +115,6 @@ export default class CustomToolbarEditor extends Component {
       this.state.editorState = createEditorStateWithText(this.props.doc['content'])
     }
   }
-
-  state = {
-    socket: io('http://localhost:3000'),
-    editorState: createEditorStateWithText(this.props.doc.content),
-    modalIsOpen: false,
-    toUser: '',
-    title: 'Untitled',
-  };
 
   componentDidMount = () {
     this.state.socket.on('connect', () => {
