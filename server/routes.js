@@ -117,7 +117,7 @@ router.post('/share', (req,res) => {
   })
 })
 
-router.post('/retrieveAll', (req, res) =>{
+router.get('/retrieveAll', (req, res) =>{
   User.findById(req.user._id)
   .populate("docList")
   .exec(function(err, result) {
