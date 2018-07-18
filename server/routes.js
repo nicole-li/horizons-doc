@@ -117,7 +117,8 @@ router.post('/share', (req,res) => {
   })
 })
 
-router.get('/retrieveAll', (req, res) =>{
+router.get('/retrieveAll', (req, res) => {
+  console.log('Retrieve all', req.user)
   User.findById(req.user._id)
   .populate("docList")
   .exec(function(err, result) {
@@ -135,7 +136,7 @@ router.get('/retrieveAll', (req, res) =>{
   })
 })
 
-//get a document from the home page
+// Get a document from the home page
 router.get('/retrieve/:id', (req, res) => {
   var id = req.params.id;
   Document.findById(id).populate("collaboratorList").exec(function(err, result){
@@ -149,7 +150,6 @@ router.get('/retrieve/:id', (req, res) => {
         success: true,
         document: result
       })
-
 
     }
   })

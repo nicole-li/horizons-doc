@@ -16,15 +16,17 @@ export default class Login extends React.Component {
         "Content-Type": "application/json; charset=utf-8"
       },
       method: 'POST',
-      body: {
+      credentials: 'same-origin',
+      body: JSON.stringify({
         username: this.state.username,
         password: this.state.password
-      }
+      })
     })
     .then((resp) => resp.json())
     .then((json) => {
-      console.log(json);
       if (json.success) {
+        console.log('Successfully logged in.')
+        this.props.setUser(this.state.username)
         this.props.redirect('Home')
       }
       else {
@@ -48,7 +50,6 @@ export default class Login extends React.Component {
             type="text"/></p>
           <button onClick={this.login} className="button">Login</button>
         </div>
-        <button className="button" onClick={()=>{this.props.redirect('Home')}}>Home</button>
         <button className="button" onClick={()=>{this.props.redirect('Register')}}>Register</button>
       </div>
     )
