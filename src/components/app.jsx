@@ -4,6 +4,7 @@ import Document from './Document.jsx';
 import Register from './Register.jsx';
 import Home from './Home.jsx';
 
+
 class DocItem extends React.Component {
   render() {
     return(
@@ -28,6 +29,7 @@ export default class App extends React.Component {
   }
 
   redirect(page) {
+    console.log(page)
     this.setState({currentPage: page})
   }
 

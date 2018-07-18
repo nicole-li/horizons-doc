@@ -13,6 +13,9 @@ var userSchema = new Schema({
   password: {
     type: String
   },
+  color:{
+    type: String
+  }
   docList: [{
     type: ObjectId,
     ref:'Document'
@@ -45,6 +48,10 @@ var documentSchema = new Schema({
   },
   lastEditTime: {
     type: Date
+  },
+  numUser:{
+    type: array,
+    default=["red", "blue", "green", "orange", "yellow", "purple"];
   }
 },
   {

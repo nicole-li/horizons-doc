@@ -23,6 +23,8 @@ import ReactDOM from 'react-dom';
 import Modal from 'react-modal';
 import ScrollArea from 'react-scrollbar';
 
+import io from 'socket.io'
+
 class HeadlinesPicker extends Component {
   componentDidMount() {
     setTimeout(() => { window.addEventListener('click', this.onWindowClick); });
@@ -113,14 +115,46 @@ export default class CustomToolbarEditor extends Component {
     }
   }
 
-  componentDidMount(){
-    console.log(this.props.doc)
+  state = {
+    socket: io('http://localhost:3000'),
+    editorState: createEditorStateWithText(this.props.doc.content),
+    modalIsOpen: false,
+    toUser: '',
+    title: 'Untitled',
+  };
+
+  componentDidMount = () {
+    this.state.socket.on('connect', () => {
+      console.log('frontend connected');
+      // this.state.socket.emit('userJoined', this.props.user);
+      this.state.socket.emit('watchDoc', this.props.doc._id, this.props.user);
+      this.state.socket.on('update', (contentArray) => {
+        this.setState(editorState: createEditorStateWithText(contentArray))
+        this.save();
+      })
+      this.state.socket.on('joinRoomError', (error) =>
+        console.log('room full error' + error)
+      )
+    }
   }
+
+  componentWillUnmount =() {
+
+    socket.off('watchDoc', this.remoteStateChange);
+    socket.emit('closeDocument', {docId: this.props.doc._id, this.props.user});
+  }
+
+  remoteStateChange =(res)=> {
+    this.setState({editorState:
+       EditorState.createWithContent(convertFromRaw(res.rawState))});
+  }
+
 
   onChange = (editorState) => {
     this.setState({
       editorState,
     });
+    this.state.socket.emit('sync', this.props.doc, this.state.editorState)
   };
 
   focus = () => {
