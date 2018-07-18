@@ -117,7 +117,7 @@ export default class CustomToolbarEditor extends Component {
   };
 
   save = () => {
-    fetch('/save', {
+    fetch('http://localhost:3000/save', {
       method: 'POST',
       headers: {
         "Content-Type": "application/json"
