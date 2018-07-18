@@ -62,8 +62,11 @@ module.exports = function (passport) {
 
   // POST Login page
   router.post('/login', passport.authenticate('local'), function(req, res) {
+    console.log('req.user', req.user)
+    console.log('req.session', req.session)
+    req.session.something = true;
     res.json({
-      success: true
+      success: true,
     });
   })
 
