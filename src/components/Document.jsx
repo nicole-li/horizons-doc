@@ -21,6 +21,7 @@ import {EditorState, RichUtils} from 'draft-js';
 
 import ReactDOM from 'react-dom';
 import Modal from 'react-modal';
+import ScrollArea from 'react-scrollbar';
 
 class HeadlinesPicker extends Component {
   componentDidMount() {
@@ -123,7 +124,7 @@ export default class CustomToolbarEditor extends Component {
       },
       body: JSON.stringify({
         content: this.state.editorState,
-        lastEditTime: new Date()
+        docId: this.props.doc._id
       })
     })
     .then((response) => response.json())
@@ -150,7 +151,7 @@ export default class CustomToolbarEditor extends Component {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        toUser: this.state.toUser,
+        username: this.state.toUser,
         lastEditTime: new Date()
       })
     })
@@ -160,14 +161,15 @@ export default class CustomToolbarEditor extends Component {
 
   render() {
     return (
+      <ScrollArea>
       <div>
         <h1>Document Editor</h1>
-        <input className="title" onChange={(e) => this.setState({title: e.target.value})} value={this.state.title}/>
         <div className="nav">
           <button className="button" onClick={()=>{this.props.redirect('Home')}}>Home</button>
           <button className="button" type='submit'onClick={this.save}>Save</button>
           <button className="button" type='submit'onClick={this.openModal}>Share</button>
         </div>
+        <input className="title" onChange={(e) => this.setState({title: e.target.value})} value={this.state.title}/>
 
         <Modal
           isOpen={this.state.modalIsOpen}
@@ -195,6 +197,7 @@ export default class CustomToolbarEditor extends Component {
           />
         </div>
       </div>
+      </ScrollArea>
     );
   }
 }
