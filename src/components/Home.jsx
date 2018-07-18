@@ -29,7 +29,9 @@ export default class Home extends React.Component {
   }
 
   logout = () => {
-    fetch('http://localhost:3000/logout')
+    fetch('http://localhost:3000/logout', {
+      credentials: 'same-origin',
+    })
     .then(resp => resp.json())
     .then(json => {
       if (json.success) {
@@ -47,7 +49,8 @@ export default class Home extends React.Component {
       method: 'POST',
       header: {
         "Content-Type": "application/json; charset=utf-8"
-      }
+      },
+      credentials: 'same-origin',
     })
     .then(resp => resp.json())
     .then(json => {
