@@ -145,7 +145,7 @@ export default class CustomToolbarEditor extends Component {
   }
 
   share = () => {
-    fetch('/share', {
+    fetch('http://localhost:3000/share', {
       method: 'POST',
       headers: {
         "Content-Type": "application/json"
