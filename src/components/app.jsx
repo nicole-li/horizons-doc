@@ -2,6 +2,7 @@ import React from 'react';
 import Login from './Login.jsx';
 import Document from './Document.jsx';
 import Register from './Register.jsx';
+// import io from 'socket.io';
 
 class DocItem extends React.Component {
   render() {

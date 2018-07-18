@@ -4,9 +4,6 @@ const router = express.Router();
 const mongoose = require('mongoose');
 var models = require('./models.js');
 
-// const server = require('http').Server(app);
-// const io = require('socket.io')(server);
-
 var User = models.User;
 var Document= models.Document;
 
