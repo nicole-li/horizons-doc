@@ -100,6 +100,20 @@ const customStyles = {
 Modal.setAppElement('#App');
 
 export default class CustomToolbarEditor extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      modalIsOpen: false,
+      toUser: '',
+      title: this.props.doc['title']
+    };
+    if (this.props.doc['content'].length === 0) {
+      this.state.editorState = EditorState.createEmpty();
+    }
+    else {
+      this.state.editorState = createEditorStateWithText(this.props.doc['content'])
+    }
+  }
 
   state = {
     socket: io('http://localhost:3000'),
@@ -148,14 +162,15 @@ export default class CustomToolbarEditor extends Component {
   };
 
   save = () => {
-    fetch('http://localhost:3000/save', {
+    fetch('http://localhost:3000/save/'+this.props.doc.docId, {
       method: 'POST',
       headers: {
         "Content-Type": "application/json"
       },
+      credentials: 'same-origin',
       body: JSON.stringify({
         content: this.state.editorState,
-        docId: this.props.doc._id
+        lastEditTime: Date.now()
       })
     })
     .then((response) => response.json())
@@ -181,13 +196,14 @@ export default class CustomToolbarEditor extends Component {
       headers: {
         "Content-Type": "application/json"
       },
+      credentials: 'same-origin',
       body: JSON.stringify({
         username: this.state.toUser,
-        lastEditTime: new Date()
+        docId: this.props.doc._id
       })
     })
     .then((response) => response.json())
-    .then((responseJson) => console.log(responseJson))
+    .then((json) => console.log(json))
   }
 
   render() {
@@ -197,7 +213,6 @@ export default class CustomToolbarEditor extends Component {
         <h1>Document Editor</h1>
         <div className="nav">
           <button className="button" onClick={()=>{this.props.redirect('Home')}}>Home</button>
-          <button className="button" type='submit'onClick={this.save}>Save</button>
           <button className="button" type='submit'onClick={this.openModal}>Share</button>
         </div>
         <input className="title" onChange={(e) => this.setState({title: e.target.value})} value={this.state.title}/>
@@ -212,7 +227,7 @@ export default class CustomToolbarEditor extends Component {
 
           <h2 ref={subtitle => this.subtitle = subtitle}>Share</h2>
           <form>
-            <input onChange={(e) => this.setState({toUser: e.target.value})} />
+            <input onChange={(e) => this.setState({toUser: e.target.value})} value={this.state.toUser}/>
             <button onClick={this.share}>Share</button>
             <button onClick={this.closeModal}>Cancel</button>
           </form>

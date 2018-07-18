@@ -2,7 +2,8 @@ import React from 'react';
 import Login from './Login.jsx';
 import Document from './Document.jsx';
 import Register from './Register.jsx';
-// import io from 'socket.io';
+import Home from './Home.jsx';
+
 
 class DocItem extends React.Component {
   render() {
@@ -19,20 +20,12 @@ export default class App extends React.Component {
     super(props)
     this.state = {
       currentPage: "Login",
-      docs: [],
-      display: {
-        content: 'Welcome! Start typing here'
-      }
+      display: {},
+      username: '',
     };
     this.redirect = this.redirect.bind(this);
-  }
-
-  componentDidMount(){
-    fetch('http://localhost:3000/retrieveAll')
-    .then(resp => resp.json())
-    .then(json => this.setState({
-      docs: this.state.docs.concat(json)
-    }))
+    this.display = this.display.bind(this);
+    this.setUser = this.setUser.bind(this);
   }
 
   redirect(page) {
@@ -40,32 +33,25 @@ export default class App extends React.Component {
     this.setState({currentPage: page})
   }
 
-  displayDoc(doc) {
+  display(doc) {
+    console.log(doc)
     this.setState({
-      currentPage: 'Document',
-      display: doc
+      display: doc,
+      currentPage: 'Document'
     })
+    console.log(this.state.display)
+  }
+
+  setUser(username) {
+    this.setState({username: username})
   }
 
   render(){
     return(
       <div>
-        {
-          this.state.currentPage === "Home" ?
-          <div>
-            <h1>Home Page</h1>
-            <div className="nav">
-              <button className="button" onClick={()=>{this.redirect('Login')}}>Logout</button>
-              <button className="button" onClick={()=>{this.redirect('Document')}}>New Document</button>
-            </div>
-            <div className="docList">
-              {this.state.docs.map((doc) => <DocItem onClick={()=>{this.displayDoc(doc)}} doc={doc}/>)}
-            </div>
-          </div>
-          : null
-        }
-        {this.state.currentPage === "Login" ? <Login redirect={this.redirect}/> : null}
-        {this.state.currentPage === "Document" ? <Document doc={this.state.display} redirect={this.redirect}/> : null}
+        {this.state.currentPage === "Home" ? <Home redirect={this.redirect} display={this.display}/> : null}
+        {this.state.currentPage === "Login" ? <Login redirect={this.redirect} setUser={this.setUser}/> : null}
+        {this.state.currentPage === "Document" ? <Document user={this.state.username} doc={this.state.display} redirect={this.redirect}/> : null}
         {this.state.currentPage === "Register" ? <Register redirect={this.redirect}/> : null}
       </div>
     )
