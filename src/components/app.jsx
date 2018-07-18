@@ -27,7 +27,7 @@ export default class App extends React.Component {
   }
 
   componentDidMount(){
-    fetch('/documents')
+    fetch('/retrieveAll')
     .then(resp => resp.json())
     .then(json => this.setState({
       docs: this.state.docs.concat(json)
