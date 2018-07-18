@@ -133,6 +133,7 @@ export default class CustomToolbarEditor extends Component {
       headers: {
         "Content-Type": "application/json"
       },
+      credentials: 'same-origin',
       body: JSON.stringify({
         content: this.state.editorState,
         lastEditTime: Date.now()
@@ -161,9 +162,10 @@ export default class CustomToolbarEditor extends Component {
       headers: {
         "Content-Type": "application/json"
       },
+      credentials: 'same-origin',
       body: JSON.stringify({
         username: this.state.toUser,
-        docId: this.props.doc.docId
+        docId: this.props.doc._id
       })
     })
     .then((response) => response.json())
