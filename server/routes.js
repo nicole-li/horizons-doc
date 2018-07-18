@@ -4,8 +4,8 @@ const router = express.Router();
 const mongoose = require('mongoose');
 var models = require('./models.js');
 
-const server = require('http').Server(app);
-const io = require('socket.io')(server);
+// const server = require('http').Server(app);
+// const io = require('socket.io')(server);
 
 var User = models.User;
 var Document= models.Document;
@@ -117,7 +117,7 @@ router.post('/share', (req,res) => {
   })
 })
 
-router.post('/retrieveAll', (req, res) =>{
+router.get('/retrieveAll', (req, res) =>{
   User.findById(req.user._id)
   .populate("docList")
   .exec(function(err, result) {

@@ -9,32 +9,18 @@ export default class Login extends React.Component {
     }
   }
 
-  login = () => {
-    fetch('/login', {
+  login = (e) => {
+    e.preventDefault;
+    fetch('http://localhost:3000/login', {
       method: 'POST',
       data: {
         username: this.state.username,
         password: this.state.password
       }
     })
-    .then(resp => resp.json())
-    .then(json => {
-      if (json.success) {
-        this.props.redirect('Home')
-      }
-    })
-  }
-
-
-  login = (e) => {
-    e.preventDefault;
-    fetch('http://localhost:3000/login', {
-      method: 'POST',
-      data: {
-      }
-    })
     .then((resp) => resp.json())
     .then((json) => {
+      console.log(json);
       if (json.success) {
         this.props.redirect('Document')
       }

@@ -64,6 +64,18 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.use('/', auth(passport));
+
+app.use('/', function(req, res, next){
+  if(!req.user){
+    res.json({
+      success: false,
+      error: "User Not Logged In"
+    })
+  }else{
+    next();
+  }
+})
+
 app.use('/', routes);
 
 // catch 404 and forward to error handler

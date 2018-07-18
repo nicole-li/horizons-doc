@@ -14,11 +14,11 @@ export default class Login extends React.Component {
     e.preventDefault;
     fetch('http://localhost:3000/register', {
       method: 'POST',
-      data: {
+      body: JSON.stringify({
         username: this.state.username,
         password: this.state.password,
         passwordRepeat: this.state.passwordRepeat
-      }
+      })
     })
     .then((resp) => resp.json())
     .then((json) => {
