@@ -35,6 +35,7 @@ export default class App extends React.Component {
   }
 
   redirect(page) {
+    console.log(page)
     this.setState({currentPage: page})
   }
 
