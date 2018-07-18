@@ -103,7 +103,7 @@ export default class CustomToolbarEditor extends Component {
     this.state = {
       modalIsOpen: false,
       toUser: '',
-      title: 'Untitled'
+      title: this.props.doc['title']
     };
     if (this.props.doc['content'].length === 0) {
       this.state.editorState = EditorState.createEmpty();
