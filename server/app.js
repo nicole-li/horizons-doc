@@ -17,9 +17,7 @@ var auth = require('./auth.js');
 
 var app = express();
 const server = require('http').Server(app);
-const io = require('socket.io')(server, {
-  pingInterval: 30000
-});
+const io = require('socket.io')(server);
 
 
 // app.use(express.static(path.join(__dirname, 'public')));
@@ -129,16 +127,21 @@ io.on('connection', (socket) => {
   console.log('connected');
 
   //check for number of users in a room
-  socket.on('watchDoc', (doc, user) =>{
-    Document.findById(doc._id, (error, res) => {
+  socket.on('watchDoc', (id, username) =>{
+    Document.findById(id, (error, res) => {
       if (res.numUser.length > 0) {
-        socket.join(doc._id)
-        res.update({ _id: doc._id}, {
+        socket.join(id)
+        res.update({ _id: id}, {
           numUser: res.numUser++
         })
-        user.color=res.numUser[0];
-        res.numUserValue.pop();
-
+        User.find({username: username}, function(err, result){
+          if(err){
+            socket.emit("Could not find User");
+          }else{
+            result.color=res.numUser[0];
+            res.numUser.shift();
+          }
+        })
       } else {
         socket.emit('joinRoomError', 'room full, cannot join ')
       }
@@ -146,7 +149,10 @@ io.on('connection', (socket) => {
   })
   //update sync
   socket.on('sync', (doc, content) => {
-    io.to(doc._id).emit('update', content)
+    // console.log("CONTENT", content);
+    // console.log("DOC", doc);
+
+    socket.to(doc._id).emit('update', content)
   })
 
   socket.on('closeDocument', (docId, user) =>{
@@ -162,4 +168,4 @@ io.on('connection', (socket) => {
 })
 
 
-app.listen(process.env.PORT || 3000)
+server.listen(process.env.PORT || 3000)

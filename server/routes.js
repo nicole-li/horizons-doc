@@ -15,7 +15,7 @@ mongoose.connect(process.env.MONGODB_URI);
 router.post('/save/:id', (req, res) => {
   let id = req.params.id;
   Document.findByIdAndUpdate(id, { content: req.body.content,
-    lastEditTime: req.body.lastEditTime, title: req.body.title }, function(err, result) {
+    lastEditTime: req.body.lastEditTime}, function(err, result) {
       if (err) {
         console.log("Selected Doc cannot be saved because it does not exist");
       }else{
@@ -33,7 +33,7 @@ router.post('/newDoc/:title', (req,res)=> {
   //       "__v": 0
   //   }
   new Document({
-    content: [],
+    content: '',
     owner: req.user._id,
     collaboratorList: [],
     title: req.params.title, createdTime: new Date(),
