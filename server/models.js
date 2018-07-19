@@ -26,6 +26,9 @@ var documentSchema = new Schema({
   content: {
     type: String,
   },
+  history:{
+    type: Array
+  },
   owner: {
     type: ObjectId,
     required: true,

@@ -124,19 +124,22 @@ app.use(function(err, req, res, next) {
 
 
 io.on('connection', (socket) => {
-  console.log('connected');
+  console.log('connected backend');
 
   //check for number of users in a room
-  socket.on('watchDoc', (id, username) =>{
+  socket.on('watchDoc', ({id, username}, next) =>{
+    console.log('@@backend watchDoc fired ',id, username)
     Document.findById(id, (error, res) => {
       if (res.numUser.length > 0) {
+        console.log('@@socket.join', id)
         socket.join(id)
-        res.update({ _id: id}, {
-          numUser: res.numUser++
-        })
-        User.find({username: username}, function(err, result){
+        //console.log(res)
+        //res.update({ _id: id}, {
+      //    numUser: res.numUser++
+        //})
+        User.findOne({username: username}, function(err, result){
           if(err){
-            socket.emit("Could not find User");
+            // socket.emit("Could not find User");
           }else{
             result.color=res.numUser[0];
             res.numUser.shift();
@@ -145,14 +148,15 @@ io.on('connection', (socket) => {
       } else {
         socket.emit('joinRoomError', 'room full, cannot join ')
       }
+      next();
     })
   })
-  //update sync
-  socket.on('sync', (doc, content) => {
-    // console.log("CONTENT", content);
-    // console.log("DOC", doc);
-
-    socket.to(doc._id).emit('update', content)
+  //step 2 update sync
+  socket.on('sync', ({id, content,username}) => {
+    console.log("SYNC", id);
+    console.log("CONTENT", content);
+    //console.log("DOC", doc);
+    socket.to(id).emit('update', {content, username})
   })
 
   socket.on('closeDocument', (docId, user) =>{
