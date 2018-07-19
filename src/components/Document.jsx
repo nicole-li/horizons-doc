@@ -23,7 +23,7 @@ import ReactDOM from 'react-dom';
 import Modal from 'react-modal';
 import ScrollArea from 'react-scrollbar';
 
-import io from 'socket.io'
+import io from 'socket.io-client'
 
 class HeadlinesPicker extends Component {
   componentDidMount() {
@@ -106,7 +106,8 @@ export default class CustomToolbarEditor extends Component {
       socket: io('http://localhost:3000'),
       modalIsOpen: false,
       toUser: '',
-      title: this.props.doc['title']
+      title: this.props.doc['title'],
+      else: false
     };
     if (this.props.doc['content'].length === 0) {
       this.state.editorState = EditorState.createEmpty();
@@ -120,50 +121,78 @@ export default class CustomToolbarEditor extends Component {
     this.state.socket.on('connect', () => {
       console.log('frontend connected');
       // this.state.socket.emit('userJoined', this.props.user);
-      this.state.socket.emit('watchDoc', this.props.doc._id, this.props.user);
-      this.state.socket.on('update', (contentArray) => {
-        this.setState(editorState: createEditorStateWithText(contentArray))
-        this.save();
+
+      this.state.socket.emit('watchDoc', this.props.doc["_id"], this.props.user);
+
+      this.state.socket.on('update', (content) => {
+        // console.log("LOOK AT ME", content);
+
+        var newContent=  createEditorStateWithText(content);
+        var selection= this.state.editorState.getSelection();
+        //
+        // console.log("NEW CONTENT", newContent);
+        // console.log("SELECTION", this.state.editorState);
+        //
+        var newEditorState = EditorState.forceSelection(newContent, selection)
+
+        // console.log("Over Here", newEditorState.getCurrentInlineStyle());
+        // this.setState({editorState: newContent})
+
+        this.setState({editorState: newContent, else: true})
+        this.save(newContent.getCurrentContent().getPlainText());
       })
+
       this.state.socket.on('joinRoomError', (error) =>
-        console.log('room full error' + error)
+        console.log('room full error', error)
       )
-    }
+    })
   }
 
   componentWillUnmount =() => {
-
-    socket.off('watchDoc', this.remoteStateChange);
-    socket.emit('closeDocument', {docId: this.props.doc._id, this.props.user});
+    this.state.socket.off('watchDoc', this.remoteStateChange);
+    this.state.socket.emit('closeDocument', (this.props.doc._id, this.props.user));
   }
 
-  remoteStateChange =(res)=> {
-    this.setState({editorState:
-       EditorState.createWithContent(convertFromRaw(res.rawState))});
+  remoteStateChange =(res) => {
+    this.setState({
+      editorState: EditorState.createWithContent(convertFromRaw(res.rawState))
+     });
   }
 
 
   onChange = (editorState) => {
-    this.setState({
-      editorState,
-    });
-    console.log(editorState)
-    this.state.socket.emit('sync', this.props.doc, this.state.editorState)
+
+    if(this.state.else){
+      this.setState({else: false});
+    }else{
+    // console.log("On Change", editorState);
+    this.setState({editorState: editorState });
+    this.state.socket.emit('sync', this.props.doc,
+      editorState.getCurrentContent().getPlainText())
+    }
+
+      // console.log("After Emit", editorState);
+    // console.log("eeeee", this.state.editorState.getCurrentContent().getPlainText());
+    // this.setState({
+    //   editorState: editorState,
+    // });
+    // this.state.socket.emit('sync', this.props.doc, this.state.editorState.getCurrentContent().getPlainText())
   };
 
   focus = () => {
     this.editor.focus();
   };
 
-  save = () => {
-    fetch('http://localhost:3000/save/'+this.props.doc.docId, {
+  save = (content) => {
+    // console.log("In Save")
+    fetch('http://localhost:3000/save/'+this.props.doc._id, {
       method: 'POST',
       headers: {
         "Content-Type": "application/json"
       },
       credentials: 'same-origin',
       body: JSON.stringify({
-        content: this.state.editorState,
+        content: content,
         lastEditTime: Date.now()
       })
     })
