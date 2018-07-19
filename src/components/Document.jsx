@@ -116,7 +116,7 @@ export default class CustomToolbarEditor extends Component {
     }
   }
 
-  componentDidMount = () {
+  componentDidMount = () => {
     this.state.socket.on('connect', () => {
       console.log('frontend connected');
       // this.state.socket.emit('userJoined', this.props.user);
@@ -131,7 +131,7 @@ export default class CustomToolbarEditor extends Component {
     }
   }
 
-  componentWillUnmount =() {
+  componentWillUnmount =() => {
 
     socket.off('watchDoc', this.remoteStateChange);
     socket.emit('closeDocument', {docId: this.props.doc._id, this.props.user});
@@ -147,6 +147,7 @@ export default class CustomToolbarEditor extends Component {
     this.setState({
       editorState,
     });
+    console.log(editorState)
     this.state.socket.emit('sync', this.props.doc, this.state.editorState)
   };
 
