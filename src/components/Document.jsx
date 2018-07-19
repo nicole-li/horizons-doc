@@ -17,7 +17,7 @@ import {
   CodeBlockButton
 } from 'draft-js-buttons';
 
-import {EditorState, RichUtils} from 'draft-js';
+import {EditorState, RichUtils, convertFromRaw, convertToRaw} from 'draft-js';
 
 import ReactDOM from 'react-dom';
 import Modal from 'react-modal';
@@ -127,18 +127,18 @@ export default class CustomToolbarEditor extends Component {
       this.state.socket.on('update', (content) => {
         // console.log("LOOK AT ME", content);
 
-        var newContent=  createEditorStateWithText(content);
-        var selection= this.state.editorState.getSelection();
+        var newContent=  createEditorStateWithText(convertFromRaw(content));
+        var cursorSelection = this.state.editorState.getSelection();
         //
         // console.log("NEW CONTENT", newContent);
         // console.log("SELECTION", this.state.editorState);
         //
-        var newEditorState = EditorState.forceSelection(newContent, selection)
+        var newEditorState = EditorState.forceSelection(newContent, cursorSelection)
 
         // console.log("Over Here", newEditorState.getCurrentInlineStyle());
         // this.setState({editorState: newContent})
 
-        this.setState({editorState: newContent, else: true})
+        this.setState({editorState: newEditorState, else: true})
         this.save(newContent.getCurrentContent().getPlainText());
       })
 
@@ -161,15 +161,14 @@ export default class CustomToolbarEditor extends Component {
 
 
   onChange = (editorState) => {
-
     if(this.state.else){
       this.setState({else: false});
     }else{
-    // console.log("On Change", editorState);
-    this.setState({editorState: editorState });
-    this.state.socket.emit('sync', this.props.doc,
-      editorState.getCurrentContent().getPlainText())
-    }
+      //console.log("On Change", editorState);
+      this.setState({editorState: editorState });
+      this.state.socket.emit('sync', this.props.doc,
+        editorState.getCurrentContent().getPlainText())
+      }
 
       // console.log("After Emit", editorState);
     // console.log("eeeee", this.state.editorState.getCurrentContent().getPlainText());
