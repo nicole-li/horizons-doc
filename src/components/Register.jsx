@@ -38,7 +38,7 @@ export default class Register extends React.Component {
 
   render(){
     return(
-      <div>
+      <div className="pageContainer">
         <h2 className="page1">Register</h2>
         <div className="form">
           <p>Username: <input

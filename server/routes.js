@@ -155,5 +155,22 @@ router.get('/retrieve/:id', (req, res) => {
   })
 })
 
+router.get('/collaborator/:id', (req, res) => {
+  var id = req.params.id;
+  User.findById(id).exec(function(err, result){
+    if(err){
+      res.json({
+        success: false,
+        error: err
+      })
+    }else{
+      res.json({
+        success: true,
+        user: result
+      })
+
+    }
+  })
+})
 
 module.exports = router;

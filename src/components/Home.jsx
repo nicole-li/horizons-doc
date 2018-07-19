@@ -86,10 +86,10 @@ export default class Home extends React.Component {
     this.setState({modalIsOpen: true});
   }
 
-  afterOpenModal = () => {
-    // references are now sync'd and can be accessed.
-    this.subtitle.style.color = '#f00';
-  }
+  // afterOpenModal = () => {
+  //   // references are now sync'd and can be accessed.
+  //   this.subtitle.style.color = '#f00';
+  // }
 
   closeModal = () => {
     this.setState({modalIsOpen: false});
@@ -97,27 +97,32 @@ export default class Home extends React.Component {
 
   render(){
     return(
-      <div>
-        <h1>Home Page</h1>
+      <div className="pageContainer">
+        <h1>Welcome Home, {this.props.user}</h1>
+
+        <br/>
+
         <div className="nav">
           <button className="button" onClick={this.logout}>Logout</button>
           <button className="button" onClick={this.openModal}>New Document</button>
         </div>
 
+        <br/>
+
         <Modal
           isOpen={this.state.modalIsOpen}
-          onAfterOpen={this.afterOpenModal}
+          // onAfterOpen={this.afterOpenModal}
           onRequestClose={this.closeModal}
           style={customStyles}
           contentLabel="Example Modal"
         >
 
-          <h2 ref={subtitle => this.subtitle = subtitle}>Create New Document</h2>
-          <form>
+          <h3>Create New Document</h3>
+          <div>
             <input onChange={(e) => this.setState({title: e.target.value})} value={this.state.title}/>
             <button onClick={this.newDoc}>Create</button>
             <button onClick={this.closeModal}>Cancel</button>
-          </form>
+          </div>
         </Modal>
 
         <div className="docList">

@@ -37,7 +37,7 @@ export default class Login extends React.Component {
 
   render(){
     return(
-      <div>
+      <div className="pageContainer">
         <h2 className="h2">Login</h2>
         <div className="form">
           <p>Username: <input
