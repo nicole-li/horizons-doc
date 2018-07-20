@@ -118,7 +118,10 @@ export default class CustomToolbarEditor extends Component {
         }
         else {
 
-          this.setState({ editorState : EditorState.createWithContent(convertFromRaw(JSON.parse(res.document.content)))})
+          this.setState({
+            editorState : EditorState.createWithContent(convertFromRaw(JSON.parse(res.document.content))),
+            doc: res.document
+          })
         }
       }else{
         console.log("FETCH FAILED", res)
@@ -269,9 +272,9 @@ export default class CustomToolbarEditor extends Component {
   render() {
     return (
       <div className="pageContainer">
-        <h1>Document Editor</h1>
+        <h1>{this.state.title}</h1>
+        <br/>
         <div className="nav">
-          <input style={{textAlign: 'center'}} onChange={(e) => this.setState({title: e.target.value})} value={this.state.title}/>
           <button className="btn btn-light" onClick={()=>{this.props.redirect('Home')}}>Home</button>
           <button className="btn btn-light" type='submit'onClick={this.openModal}>Share</button>
         </div>
@@ -330,6 +333,19 @@ export default class CustomToolbarEditor extends Component {
             editorState={this.state.editorState}
             onChange={this.onChange}
           />
+        </div>
+
+        <h6>History</h6>
+        <div className="history">
+          {this.state.doc.history
+            .filter((version) => this.state.doc.history.indexOf(version)%5 === 0)
+            .filter((version) => version.length > 1)
+            .map((version) => {
+              return (<div
+              className="form-signin form-control"
+              onClick={() => console.log(typeof version)}>
+            <h6>{JSON.stringify(JSON.parse(version).blocks[0].text)}</h6>
+          </div>)})}
         </div>
       </div>
       );
