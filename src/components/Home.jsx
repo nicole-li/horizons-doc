@@ -159,17 +159,17 @@ export default class Home extends React.Component {
           {this.state.docs
             .filter((doc) => doc.content.indexOf(this.state.search) > -1 || doc.title.indexOf(this.state.search) > -1)
             .map((doc) =>
-              <div>
-              <div>
-
-              <button className="btn btn-light" onClick ={(e)=> {this.deleteDoc(e, doc)}}>Delete Document</button>
-
-              <div className="form-signin form-control" key={doc._id} onClick={()=>{this.displayDoc(doc)}}>
+              <div style={{display:'flex',flexDirection: 'row', alignItems:'center', justifyContent: 'center'}}>
+              <div style={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}>
+              <div style={{padding: 10}}>
+                <button className="btn btn-light" onClick ={(e)=> {this.deleteDoc(e, doc)}}>&#9747;</button>
+              </div>
+              <div style={{padding: 10}} className="form-signin form-control" key={doc._id} onClick={()=>{this.displayDoc(doc)}}>
               <h6>{doc.title}</h6>
               <p><span style={{fontWeight: 'bold'}}>Last Edited: </span>{new Date(doc.lastEditTime).toLocaleString()}</p>
             </div>
 
-            </div>
+          </div>
           </div>
           )}
         </div>
