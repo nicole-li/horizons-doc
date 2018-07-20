@@ -143,6 +143,7 @@ io.on('connection', (socket) => {
           }else{
             result.color=res.numUser[0];
             res.numUser.shift();
+            socket.emit('color', result.color);
           }
         })
       } else {
@@ -168,6 +169,11 @@ io.on('connection', (socket) => {
         user.color = '';
       }
     })
+  })
+
+  //selection and highlighting
+  socket.on('selection', ({selectionState, color, docId}) => {
+    socket.to(docId).emit('otherUserSelection', {selectionState, color})
   })
 })
 

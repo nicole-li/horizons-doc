@@ -17,7 +17,7 @@ import {
   CodeBlockButton
 } from 'draft-js-buttons';
 
-import {Editor, EditorState, RichUtils, convertFromRaw, convertToRaw, SelectionState, ContentState} from 'draft-js';
+import {Editor, EditorState, RichUtils, convertFromRaw, convertToRaw, SelectionState, ContentState, Modifier} from 'draft-js';
 
 import ReactDOM from 'react-dom';
 import Modal from 'react-modal';
@@ -113,7 +113,8 @@ export default class CustomToolbarEditor extends Component {
       else: false,
       selectionState: '',
       editorState: EditorState.createEmpty(),
-      doc: props.doc
+      doc: props.doc,
+      colorAssigned: ''
     };
   }
 
@@ -135,12 +136,11 @@ export default class CustomToolbarEditor extends Component {
       }else{
         console.log("FETCH FAILED", res)
       }
+        console.log('frontend connected');
 
-      // this.socket.on('connect', () => {
-      console.log('frontend connected');
-      console.log("Document", res.document, this.props.user);
+
       this.socket.emit('watchDoc', {id: res.document._id, username: this.props.user}, ()=>{
-
+            this.socket.on('joinRoomError', (error) => console.log('room full error', error))
         this.socket.on('update', ({content, username}) => {
           console.log("@@update", content, username, this.props.user)
 
@@ -149,17 +149,30 @@ export default class CustomToolbarEditor extends Component {
 
           var newEditorState = EditorState.forceSelection(newContent, selection)
 
-
           //this.save((convertToRaw(newEditorState.getCurrentContent())));
           this.setState({editorState: newEditorState})
         })
       });
-      this.socket.on('joinRoomError', (error) => console.log('room full error', error))
-    })
+      var colorAssigned = ''
+      this.socket.on('color', (color) => {
+        console.log('in 156 color')
+        this.setState({colorAssigned: color})
+      })
+      // var selection = this.state.editorState.getSelection();
 
-    setInterval(this.save, 30000);
-    //  })
-  }
+      var unsavedEditorState = this.state.editorState;
+
+      this.socket.on('otherUserSelection', ({selectionState, color}) => {
+        var selection = SelectionState.createEmpty();
+        selectionState = selection.merge(selectionState);
+        console.log('in 161 otherUserSelection', selectionState)
+        this.setState({editorState:
+          EditorState.createWithContent(Modifier.applyInlineStyle(this.state.editorState.getCurrentContent(), selectionState, 'BOLD'))
+        })
+      })
+  })
+  setInterval(this.save, 30000);
+}
 
   // componentWillUnmount =() => {
   //   this.state.socket.off('watchDoc', this.remoteStateChange);
@@ -172,14 +185,9 @@ export default class CustomToolbarEditor extends Component {
   //    });
   // }
 
-  //this.save((convertToRaw(newEditorState.getCurrentContent())));
-  // setInterval(save, 30000);
 
   onChange = (editorState) => {
     //step 1
-    // if(this.state.else){
-    //   this.setState({else: false});
-    // }else{
     console.log("On Change", editorState);
 
     //passed in selection
@@ -191,26 +199,19 @@ export default class CustomToolbarEditor extends Component {
         username: this.props.user
       })
     });
-    // editorState.getCurrentContent().getPlainText())
 
-    //}
+    this.socket.emit('selection', { selectionState: selection ,
+      color: this.state.colorAssigned, docId: this.state.doc._id }
+    )
 
-    // console.log("After Emit", editorState);
-    // console.log("eeeee", this.state.editorState.getCurrentContent().getPlainText());
-    // this.setState({
-    //   editorState: editorState,
-    // });
-    // this.state.socket.emit('sync', this.props.doc, this.state.editorState.getCurrentContent().getPlainText())
   };
 
   focus = () => {
     this.editor.focus();
   };
 
+  //save is called by 30s intervals in componentDidMount
   save = () => {
-    // console.log("In Save")
-
-
     fetch('http://localhost:3000/save/'+this.state.doc._id, {
       method: 'POST',
       headers: {
