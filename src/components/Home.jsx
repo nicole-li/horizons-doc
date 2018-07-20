@@ -158,11 +158,20 @@ export default class Home extends React.Component {
         <div className="docList">
           {this.state.docs
             .filter((doc) => doc.content.indexOf(this.state.search) > -1 || doc.title.indexOf(this.state.search) > -1)
-            .map((doc) => <div className="form-signin form-control" key={doc._id} onClick={()=>{this.displayDoc(doc)}}>
+            .map((doc) =>
+              <div>
+              <div>
+
+              <button className="btn btn-light" onClick ={(e)=> {this.deleteDoc(e, doc)}}>Delete Document</button>
+
+              <div className="form-signin form-control" key={doc._id} onClick={()=>{this.displayDoc(doc)}}>
               <h6>{doc.title}</h6>
-              <button onClick ={(e)=> {this.deleteDoc(e, doc)}}>Delete Document</button>
               <p><span style={{fontWeight: 'bold'}}>Last Edited: </span>{new Date(doc.lastEditTime).toLocaleString()}</p>
-            </div>)}
+            </div>
+
+            </div>
+          </div>
+          )}
         </div>
       </div>
     )
