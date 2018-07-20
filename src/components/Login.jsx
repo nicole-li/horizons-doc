@@ -41,20 +41,24 @@ export default class Login extends React.Component {
 
   render(){
     return(
-      <div>
+      <div className="pageContainer">
         <h2 className="h2">Login</h2>
-        <div className="form">
-          <p>Username: <input
+        <div className="form-signin">
+          <input
+            placeholder="Username"
+            className="form-control"
             onChange={(e) => this.setState({username: e.target.value})}
             value={this.state.username}
-            type="text"/></p>
-          <p>Password: <input
+            type="text"/>
+          <input
+            className="form-control"
+            placeholder="Password"
             onChange={(e) => this.setState({password: e.target.value})}
             value={this.state.password}
-            type="text"/></p>
-          <button onClick={this.login} className="button">Login</button>
+            type="password"/>
+          <button onClick={this.login} className="btn btn-lg btn-primary btn-block">Login</button>
         </div>
-        <button className="button" onClick={()=>{this.props.redirect('Register')}}>Register</button>
+        <button className="btn btn-link" onClick={()=>{this.props.redirect('Register')}}>Register</button>
       </div>
     )
   }

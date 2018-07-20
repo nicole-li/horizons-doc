@@ -1,92 +1,28 @@
 import React, { Component } from 'react';
-
-//import Editor, { createEditorStateWithText } from 'draft-js-plugins-editor';
-
-import createToolbarPlugin, { Separator } from 'draft-js-static-toolbar-plugin';
-import {
-  ItalicButton,
-  BoldButton,
-  UnderlineButton,
-  CodeButton,
-  HeadlineOneButton,
-  HeadlineTwoButton,
-  HeadlineThreeButton,
-  UnorderedListButton,
-  OrderedListButton,
-  BlockquoteButton,
-  CodeBlockButton
-} from 'draft-js-buttons';
-
 import {Editor, EditorState, RichUtils, convertFromRaw, convertToRaw, SelectionState, ContentState} from 'draft-js';
-
 import ReactDOM from 'react-dom';
 import Modal from 'react-modal';
-import ScrollArea from 'react-scrollbar';
-
+import ColorPicker, { colorPickerPlugin } from 'draft-js-color-picker';
 
 import io from 'socket.io-client'
 
-class HeadlinesPicker extends Component {
-  componentDidMount() {
-    setTimeout(() => { window.addEventListener('click', this.onWindowClick); });
-
-  }
-
-  componentWillUnmount() {
-    window.removeEventListener('click', this.onWindowClick);
-  }
-
-  onWindowClick = () =>
-  // Call `onOverrideContent` again with `undefined`
-  // so the toolbar can show its regular content again.
-  this.props.onOverrideContent(undefined);
-
-  render() {
-    const buttons = [HeadlineOneButton, HeadlineTwoButton, HeadlineThreeButton];
-    return (
-      <div>
-        {buttons.map((Button, i) => // eslint-disable-next-line
-          <Button key={i} {...this.props} />
-        )}
-      </div>
-    );
-  }
-}
-
-class HeadlinesButton extends Component {
-  onClick = () =>
-  // A button can call `onOverrideContent` to replace the content
-  // of the toolbar. This can be useful for displaying sub
-  // menus or requesting additional information from the user.
-  this.props.onOverrideContent(HeadlinesPicker);
-
-  render() {
-    return (
-      <div className='headlineButtonWrapper'>
-        <button onClick={this.onClick} className='headlineButton'>
-          F
-        </button>
-      </div>
-    );
-  }
-}
-
-const toolbarPlugin = createToolbarPlugin({
-  structure: [
-    BoldButton,
-    ItalicButton,
-    UnderlineButton,
-    CodeButton,
-    Separator,
-    HeadlinesButton,
-    UnorderedListButton,
-    OrderedListButton,
-    BlockquoteButton,
-    CodeBlockButton
-  ]
-});
-const { Toolbar } = toolbarPlugin;
-const plugins = [toolbarPlugin];
+const presetColors = [
+  '#ff00aa',
+  '#F5A623',
+  '#F8E71C',
+  '#8B572A',
+  '#7ED321',
+  '#417505',
+  '#BD10E0',
+  '#9013FE',
+  '#4A90E2',
+  '#50E3C2',
+  '#B8E986',
+  '#000000',
+  '#4A4A4A',
+  '#9B9B9B',
+  '#FFFFFF',
+];
 
 const customStyles = {
   content : {
@@ -100,6 +36,56 @@ const customStyles = {
 };
 
 Modal.setAppElement('#App');
+
+const styleMap = {
+  'HIGHLIGHT': {
+    backgroundColor: 'lightgreen'
+  },
+  'highlightred': {
+    backgroundColor: 'red'
+  },
+  'highlightblue': {
+    backgroundColor: 'blue'
+  },
+  'highlightgreen': {
+    backgroundColor: 'green'
+  },
+  'highlightorange': {
+    backgroundColor: 'orange'
+  },
+  'highlightyellow': {
+    backgroundColor: 'yellow'
+  },
+  'highlightpurple': {
+    backgroundColor: 'purple'
+  },
+  'SUBSCRIPT': {
+    fontSize: '0.6em',
+    verticalAlign: 'sub'
+  },
+  'SUPERSCRIPT': {
+    fontSize: '0.6em',
+    verticalAlign: 'super'
+   },
+  'UPPERCASE': {
+    textTransform: 'uppercase'
+  },
+  'LOWERCASE': {
+    textTransform: 'lowercase'
+  },
+  'STRIKETHROUGH': {
+    textDecoration: 'line-through'
+  },
+  'SMALL': {
+    fontSize: '8px',
+  },
+  'MEDIUM': {
+    fontSize: '12px',
+  },
+  'LARGE': {
+    fontSize: '16px',
+  },
+};
 
 export default class CustomToolbarEditor extends Component {
   constructor(props) {
@@ -115,6 +101,8 @@ export default class CustomToolbarEditor extends Component {
       editorState: EditorState.createEmpty(),
       doc: props.doc
     };
+    this.getEditorState = () => this.state.editorState;
+    this.picker = colorPickerPlugin(this.onChange, this.getEditorState);
   }
 
   componentDidMount = () => {
@@ -203,10 +191,6 @@ export default class CustomToolbarEditor extends Component {
     // this.state.socket.emit('sync', this.props.doc, this.state.editorState.getCurrentContent().getPlainText())
   };
 
-  focus = () => {
-    this.editor.focus();
-  };
-
   save = () => {
     // console.log("In Save")
 
@@ -230,10 +214,10 @@ export default class CustomToolbarEditor extends Component {
     this.setState({modalIsOpen: true});
   }
 
-  afterOpenModal = () => {
-    // references are now sync'd and can be accessed.
-    this.subtitle.style.color = '#f00';
-  }
+  // afterOpenModal = () => {
+  //   // references are now sync'd and can be accessed.
+  //   this.subtitle.style.color = '#f00';
+  // }
 
   closeModal = () => {
     this.setState({modalIsOpen: false});
@@ -252,47 +236,102 @@ export default class CustomToolbarEditor extends Component {
       })
     })
     .then((response) => response.json())
-    .then((json) => console.log(json))
+    // .then((json) => console.log(json))
+    .then(this.closeModal)
+  }
+
+  isSelection = (editorState) => {
+    const selection = editorState.getSelection();
+    const start = selection.getStartOffset();
+    const end = selection.getEndOffset();
+    return start !== end;
+  };
+
+  highlight = (editorState) => {
+    if (!this.isSelection(editorState)) {
+      return;
+    }
+    editorState = RichUtils.toggleInlineStyle(editorState, 'HIGHLIGHT');
+    // using concise obj prop notation short for {editorState:editorState}
+    this.setState({editorState});
+  }
+
+  toggleInlineStyle(e, inlineStyle) {
+    e.preventDefault();
+    this.onChange(RichUtils.toggleInlineStyle(this.state.editorState, inlineStyle))
+  }
+
+  toggleBlockType(e, blockType) {
+    e.preventDefault();
+    this.onChange(RichUtils.toggleBlockType(this.state.editorState, blockType))
   }
 
   render() {
     return (
-      <ScrollArea>
-        <div>
-          <h1>Document Editor</h1>
+      <div className="pageContainer">
+        <h1>Document Editor</h1>
+        <div className="nav">
+          <input style={{textAlign: 'center'}} onChange={(e) => this.setState({title: e.target.value})} value={this.state.title}/>
+          <button className="btn btn-light" onClick={()=>{this.props.redirect('Home')}}>Home</button>
+          <button className="btn btn-light" type='submit'onClick={this.openModal}>Share</button>
+        </div>
+
+        <br></br>
+
+        <Modal
+          isOpen={this.state.modalIsOpen}
+          // onAfterOpen={this.afterOpenModal}
+          onRequestClose={this.closeModal}
+          style={customStyles}
+          contentLabel="Example Modal"
+        >
+
+          <h3>Share</h3>
           <div className="nav">
-            <button className="button" onClick={()=>{this.props.redirect('Home')}}>Home</button>
-            <button className="button" type='submit'onClick={this.openModal}>Share</button>
+            <input onChange={(e) => this.setState({toUser: e.target.value})} value={this.state.toUser}/>
+            <button className="btn btn-light" onClick={this.share}>Share</button>
+            <button className="btn btn-light" onClick={this.closeModal}>Cancel</button>
           </div>
-          <input className="title" onChange={(e) => this.setState({title: e.target.value})} value={this.state.title}/>
+        </Modal>
 
-          <Modal
-            isOpen={this.state.modalIsOpen}
-            onAfterOpen={this.afterOpenModal}
-            onRequestClose={this.closeModal}
-            style={customStyles}
-            contentLabel="Example Modal"
-            >
+        <div className="toolbar">
+          <ColorPicker
+           toggleColor={color => this.picker.addColor(color)}
+           presetColors={presetColors}
+           color={this.picker.currentColor(this.state.editorState)}
+          />
+          <button onMouseDown={e => this.toggleInlineStyle(e, 'BOLD')}>B</button>
+          <button onMouseDown={e => this.toggleInlineStyle(e, 'ITALIC')}>I</button>
+          <button onMouseDown={e => this.toggleInlineStyle(e, 'UNDERLINE')}>U</button>
+          <button onMouseDown={e => this.toggleInlineStyle(e, 'STRIKETHROUGH')}>S</button>
+          <button onMouseDown={e => this.toggleInlineStyle(e, 'UPPERCASE')}>ABC</button>
+          <button onMouseDown={e => this.toggleInlineStyle(e, 'LOWERCASE')}>xyz</button>
+          <button onMouseDown={e => this.toggleBlockType(e, 'unordered-list-item')}>Bulleted List</button>
+          <button onMouseDown={e => this.toggleBlockType(e, 'ordered-list-item')}>Numbered List</button>
+          <button onMouseDown={e => this.toggleBlockType(e, 'header-one')}>H1</button>
+          <button onMouseDown={e => this.toggleBlockType(e, 'header-two')}>H2</button>
+          <button onMouseDown={e => this.toggleBlockType(e, 'header-three')}>H3</button>
+          <button onMouseDown={e => this.toggleBlockType(e, 'header-four')}>H4</button>
+          <button onMouseDown={e => this.toggleBlockType(e, 'header-five')}>H5</button>
+          <button onMouseDown={e => this.toggleBlockType(e, 'header-six')}>H6</button>
+          <button onMouseDown={e => this.toggleInlineStyle(e, 'SUPERSCRIPT')}>Superscript</button>
+          <button onMouseDown={e => this.toggleInlineStyle(e, 'SUBSCRIPT')}>Subscript</button>
+          <button onMouseDown={e => this.toggleInlineStyle(e, 'HIGHLIGHT')}>Highlight</button>
+          <button onMouseDown={e => this.toggleInlineStyle(e, 'SMALL')}>Small</button>
+          <button onMouseDown={e => this.toggleInlineStyle(e, 'MEDIUM')}>Medium</button>
+          <button onMouseDown={e => this.toggleInlineStyle(e, 'LARGE')}>Large</button>
+        </div>
 
-              <h2 ref={subtitle => this.subtitle = subtitle}>Share</h2>
-              <form>
-                <input onChange={(e) => this.setState({toUser: e.target.value})} value={this.state.toUser}/>
-                <button onClick={this.share}>Share</button>
-                <button onClick={this.closeModal}>Cancel</button>
-              </form>
-            </Modal>
-
-            <Toolbar />
-            <div className='editor' onClick={this.focus}>
-              <Editor
-                editorState={this.state.editorState}
-                onChange={this.onChange}
-                plugins={plugins}
-                ref={(element) => { this.editor = element }}
-              />
-            </div>
-          </div>
-        </ScrollArea>
+        <div className='editor'>
+          <Editor
+            customStyleFn={this.picker.customStyleFn}
+            blockStyleFn={this.alignBlock}
+            customStyleMap={styleMap}
+            editorState={this.state.editorState}
+            onChange={this.onChange}
+          />
+        </div>
+      </div>
       );
     }
   }
