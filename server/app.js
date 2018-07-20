@@ -157,7 +157,9 @@ io.on('connection', (socket) => {
       } else {
         socket.emit('joinRoomError', 'room full, cannot join ')
       }
-      next();
+      if (next) {
+          next();
+      }
     })
   })
   //step 2 update sync
@@ -172,11 +174,18 @@ io.on('connection', (socket) => {
     Document.findById(docId, (err, docRes)=>{
       console.log('@@closeDocument, user with color ' + userColor + ' closed ' + docRes.title)
       if(err){
-        socket.emit('Error Closing the Document');
+        console.log('error', err)
       }else{
         var colArr = docRes.numUser.slice()
         colArr.push(userColor)
-        Document.findByIdAndUpdate(docId, { numUser: colArr});
+        Document.findByIdAndUpdate(docId, { numUser: colArr}, (err, result) => {
+          if (err) {
+            console.log('err', err)
+          } else {
+            console.log('result', result)
+          }
+        }
+      );
       }
     })
   })

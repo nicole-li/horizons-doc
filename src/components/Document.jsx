@@ -121,7 +121,8 @@ export default class CustomToolbarEditor extends Component {
       editorState: EditorState.createEmpty(),
       doc: props.doc,
       colorAssigned: '',
-      otherSelection: null
+      otherSelection: null,
+      otherUserColor: '',
     };
     this.getEditorState = () => this.state.editorState;
     this.picker = colorPickerPlugin(this.onChange, this.getEditorState);
@@ -158,18 +159,17 @@ export default class CustomToolbarEditor extends Component {
           var selection = this.state.editorState.getSelection();
 
           //right cursor and content
-          var newEditorState = EditorState.forceSelection(newContent, selection)
-          //this.save((convertToRaw(newEditorState.getCurrentContent())));
-          //this.setState({editorState: newEditorState})
           var selectionState = SelectionState.createEmpty();
           selectionState = selectionState.merge(otherSelection);
 
-          this.setState({otherSelection:selectionState})
+          var newEditorState = EditorState.createWithContent(Modifier.applyInlineStyle(newContent.getCurrentContent(),selectionState,
+          'highlight'+otherUserColor))
+           newEditorState = EditorState.forceSelection(newEditorState, selection)
 
+          this.setState({otherSelection:selectionState, otherUserColor: otherUserColor});
+          console.log("CONCAT", 'highlight'+otherUserColor);
           this.setState({
-            editorState: EditorState.createWithContent(Modifier.applyInlineStyle(newEditorState.getCurrentContent(),
-            selectionState,
-            'BOLD'))
+            editorState: newEditorState
           })
         })
       });
@@ -179,36 +179,35 @@ export default class CustomToolbarEditor extends Component {
         console.log('in 156 color')
         this.setState({colorAssigned: color})
       })
-      // var selection = this.state.editorState.getSelection();
-
-      // var unsavedEditorState = this.state.editorState;
-
-      // this.socket.on('otherUserSelection', ({selectionState, color}) => {
-      //   var selection = SelectionState.createEmpty();
-      //   selectionState = selection.merge(selectionState);
-      //   console.log('in 161 otherUserSelection', selectionState)
-      //   this.setState({editorState:
-      //     EditorState.createWithContent(Modifier.applyInlineStyle(this.state.editorState.getCurrentContent(), selectionState, 'BOLD'))
-      //   })
-      // })
   })
-  setInterval(this.save, 10000);
+  this.setState({ interval: setInterval(this.save, 30000)})
+
 }
 
   componentWillUnmount =() => {
-    this.socket.off('watchDoc', this.remoteStateChange);
+    console.log('@@end watchDoc')
+    this.socket.off('watchDoc');
+    this.socket.off('update');
     this.socket.emit('closeDocument', {
       docId: this.state.doc._id,
       userColor: this.state.colorAssigned}
     );
     this.setState({colorAssigned: ''})
+    clearInterval(this.state.interval);
   }
   //
-  remoteStateChange =(res) => {
-    this.setState({
-      editorState: EditorState.createWithContent(convertFromRaw(res.rawState))
-     });
-  }
+ //  () => {
+ //   this.setState({
+ //   editorState: EditorState.createWithContent(Modifier.removeInlineStyle(this.editorState.getCurrentContent(),
+ //   this.state.otherSelection,
+ //   'highlight'+otherUserColor ))})
+ // }
+  // remoteStateChange =(res) => {
+  //   console.log('@@remoteStateChange', res)
+  //   this.setState({
+  //     editorState: EditorState.createWithContent(convertFromRaw(res.rawState))
+  //    });
+  // }
 
 
   onChange = (editorState) => {
@@ -217,10 +216,20 @@ export default class CustomToolbarEditor extends Component {
     var clearedContent;
     var selection= editorState.getSelection();
 
-    if(this.state.otherSelection === null){
+
+    var colorToRemove;
+    if(this.state.otherUserColor === ''){
+       colorToRemove= this.state.colorAssigned;
+    }else{
+      colorToRemove = this.state.otherUserColor;
+    }
+    console.log('@@on change', colorToRemove)
+
+
+    if(this.state.otherSelection === null) {
       clearedContent = editorState.getCurrentContent();
     }else{
-       clearedContent = Modifier.removeInlineStyle(editorState.getCurrentContent(), this.state.otherSelection, 'BOLD')
+       clearedContent = Modifier.removeInlineStyle(editorState.getCurrentContent(), this.state.otherSelection, 'highlight'+colorToRemove);
     }
 
 
@@ -255,8 +264,16 @@ export default class CustomToolbarEditor extends Component {
       saveSelectionOther = this.state.otherSelection;
       saveSelectionYours = this.state.editorState.getSelection()
     }
-    var clearedOnce = Modifier.removeInlineStyle(this.state.editorState.getCurrentContent(), saveSelectionYours, 'BOLD')
-    var clearedTwice = Modifier.removeInlineStyle(clearedOnce, saveSelectionOther, 'BOLD')
+
+    var colorToRemove;
+    if(this.state.otherUserColor === ''){
+       colorToRemove= this.state.colorAssigned;
+    }else{
+      colorToRemove = this.state.otherUserColor;
+    }
+
+    var clearedOnce = Modifier.removeInlineStyle(this.state.editorState.getCurrentContent(), saveSelectionYours, 'highlight'+colorToRemove)
+    var clearedTwice = Modifier.removeInlineStyle(clearedOnce, saveSelectionOther, 'highlight'+colorToRemove)
 
 
     fetch('http://localhost:3000/save/' + this.props.doc._id, {

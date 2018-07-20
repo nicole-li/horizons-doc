@@ -20,6 +20,10 @@ router.post('/save/:id', (req, res) => {
         res.json({success:false})
         console.log("Selected Doc cannot be saved because it does not exist");
       }else{
+        if (!result) {
+          res.json({success: false, error: 'doc doesnt exist'})
+          return;
+        }
         //console.log('save history test' , result);
         var historyArr = result.history.slice();
         historyArr.push(result.content)
@@ -177,6 +181,24 @@ router.get('/collaborator/:id', (req, res) => {
         user: result
       })
 
+    }
+  })
+})
+
+router.post('/delete/:id', (req, res)=>{
+  var id = req.params.id;
+  Document.findOneAndRemove({_id: id}, function(err, result){
+    if(err){
+      res.json({
+        success: false,
+        error: err
+      })
+      console.log("Error Deleting the Document");
+    }else{
+      res.json({
+        success: true
+      })
+      console.log("Success Deleting the Doc");
     }
   })
 })

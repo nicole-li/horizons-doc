@@ -61,6 +61,28 @@ export default class Home extends React.Component {
     })
   }
 
+
+  deleteDoc(e, doc){
+    e.preventDefault();
+    console.log("DOCUMENT",doc._id);
+    fetch('http://localhost:3000/delete/' + doc._id, {
+      method: 'POST',
+      header: {
+        "Content-Type": "application/json; charset=utf-8"
+      },
+      credentials: 'same-origin',
+    })
+    .then(resp => resp.json())
+    .then(json => {
+      if(json.success){
+
+      }else{
+        console.log("Could not Delete the Document");
+      }
+    })
+  }
+
+
   newDoc = (e) => {
     e.preventDefault();
     fetch('http://localhost:3000/newDoc/'+this.state.title, {
@@ -138,6 +160,7 @@ export default class Home extends React.Component {
             .filter((doc) => doc.content.indexOf(this.state.search) > -1 || doc.title.indexOf(this.state.search) > -1)
             .map((doc) => <div className="form-signin form-control" key={doc._id} onClick={()=>{this.displayDoc(doc)}}>
               <h6>{doc.title}</h6>
+              <button onClick ={(e)=> {this.deleteDoc(e, doc)}}>Delete Document</button>
               <p><span style={{fontWeight: 'bold'}}>Last Edited: </span>{new Date(doc.lastEditTime).toLocaleString()}</p>
             </div>)}
         </div>
