@@ -114,7 +114,8 @@ export default class CustomToolbarEditor extends Component {
       selectionState: '',
       editorState: EditorState.createEmpty(),
       doc: props.doc,
-      colorAssigned: ''
+      colorAssigned: '',
+      otherSelection: null
     };
   }
 
@@ -133,77 +134,98 @@ export default class CustomToolbarEditor extends Component {
 
           this.setState({ editorState : EditorState.createWithContent(convertFromRaw(JSON.parse(res.document.content)))})
         }
-      }else{
-        console.log("FETCH FAILED", res)
-      }
-        console.log('frontend connected');
+      }else{ console.log("FETCH FAILED", res)  }
 
-
+      console.log('frontend connected');
       this.socket.emit('watchDoc', {id: res.document._id, username: this.props.user}, ()=>{
-            this.socket.on('joinRoomError', (error) => console.log('room full error', error))
-        this.socket.on('update', ({content, username}) => {
-          console.log("@@update", content, username, this.props.user)
+        this.socket.on('joinRoomError', (error) => console.log('room full error', error))
+
+        this.socket.on('update', ({content, username, otherUserColor, otherSelection}) => {
+          console.log("@@update color", username, otherUserColor)
 
           var newContent  = EditorState.createWithContent(convertFromRaw(content));
-          var selection= this.state.editorState.getSelection();
+          var selection = this.state.editorState.getSelection();
 
+          //right cursor and content
           var newEditorState = EditorState.forceSelection(newContent, selection)
-
           //this.save((convertToRaw(newEditorState.getCurrentContent())));
-          this.setState({editorState: newEditorState})
+          //this.setState({editorState: newEditorState})
+          var selectionState = SelectionState.createEmpty();
+          selectionState = selectionState.merge(otherSelection);
+
+          this.setState({otherSelection:selectionState})
+
+          this.setState({
+            editorState: EditorState.createWithContent(Modifier.applyInlineStyle(newEditorState.getCurrentContent(),
+            selectionState,
+            'BOLD'))
+          })
         })
       });
-      var colorAssigned = ''
+
+      //assign color
       this.socket.on('color', (color) => {
         console.log('in 156 color')
         this.setState({colorAssigned: color})
       })
       // var selection = this.state.editorState.getSelection();
 
-      var unsavedEditorState = this.state.editorState;
+      // var unsavedEditorState = this.state.editorState;
 
-      this.socket.on('otherUserSelection', ({selectionState, color}) => {
-        var selection = SelectionState.createEmpty();
-        selectionState = selection.merge(selectionState);
-        console.log('in 161 otherUserSelection', selectionState)
-        this.setState({editorState:
-          EditorState.createWithContent(Modifier.applyInlineStyle(this.state.editorState.getCurrentContent(), selectionState, 'BOLD'))
-        })
-      })
+      // this.socket.on('otherUserSelection', ({selectionState, color}) => {
+      //   var selection = SelectionState.createEmpty();
+      //   selectionState = selection.merge(selectionState);
+      //   console.log('in 161 otherUserSelection', selectionState)
+      //   this.setState({editorState:
+      //     EditorState.createWithContent(Modifier.applyInlineStyle(this.state.editorState.getCurrentContent(), selectionState, 'BOLD'))
+      //   })
+      // })
   })
-  setInterval(this.save, 30000);
+  setInterval(this.save, 10000);
 }
 
-  // componentWillUnmount =() => {
-  //   this.state.socket.off('watchDoc', this.remoteStateChange);
-  //   this.state.socket.emit('closeDocument', (this.props.doc._id, this.props.user));
-  // }
+  componentWillUnmount =() => {
+    this.socket.off('watchDoc', this.remoteStateChange);
+    this.socket.emit('closeDocument', {
+      docId: this.state.doc._id,
+      userColor: this.state.colorAssigned}
+    );
+    this.setState({colorAssigned: ''})
+  }
   //
-  // remoteStateChange =(res) => {
-  //   this.setState({
-  //     editorState: EditorState.createWithContent(convertFromRaw(res.rawState))
-  //    });
-  // }
+  remoteStateChange =(res) => {
+    this.setState({
+      editorState: EditorState.createWithContent(convertFromRaw(res.rawState))
+     });
+  }
 
 
   onChange = (editorState) => {
     //step 1
-    console.log("On Change", editorState);
-
     //passed in selection
+    var clearedContent;
     var selection= editorState.getSelection();
-    this.setState({editorState: editorState}, ()=> {
 
+    if(this.state.otherSelection === null){
+      clearedContent = editorState.getCurrentContent();
+    }else{
+       clearedContent = Modifier.removeInlineStyle(editorState.getCurrentContent(), this.state.otherSelection, 'BOLD')
+    }
+
+
+    this.setState({editorState: editorState}, ()=> {
       this.socket.emit('sync', {id: this.state.doc._id,
-        content: convertToRaw(editorState.getCurrentContent()),
-        username: this.props.user
+        content: convertToRaw(clearedContent),
+        username: this.props.user,
+        otherUserColor: this.state.colorAssigned,
+        //refers to my own color sent out
+        otherSelection: selection
       })
     });
 
-    this.socket.emit('selection', { selectionState: selection ,
-      color: this.state.colorAssigned, docId: this.state.doc._id }
-    )
-
+    // this.socket.emit('selection', { selectionState: selection ,
+    //   color: this.state.colorAssigned, docId: this.state.doc._id }
+    // )
   };
 
   focus = () => {
@@ -212,14 +234,28 @@ export default class CustomToolbarEditor extends Component {
 
   //save is called by 30s intervals in componentDidMount
   save = () => {
-    fetch('http://localhost:3000/save/'+this.state.doc._id, {
+    var saveSelectionYours;
+    var saveSelectionOther;
+    if(this.state.otherSelection === null){
+      saveSelectionYours = this.state.editorState.getSelection()
+      saveSelectionOther = this.state.editorState.getSelection()
+    } else {
+      saveSelectionOther = this.state.otherSelection;
+      saveSelectionYours = this.state.editorState.getSelection()
+    }
+    var clearedOnce = Modifier.removeInlineStyle(this.state.editorState.getCurrentContent(), saveSelectionYours, 'BOLD')
+    var clearedTwice = Modifier.removeInlineStyle(clearedOnce, saveSelectionOther, 'BOLD')
+
+
+    fetch('http://localhost:3000/save/' + this.props.doc._id, {
       method: 'POST',
       headers: {
         "Content-Type": "application/json"
       },
       credentials: 'same-origin',
       body: JSON.stringify({
-        content: JSON.stringify(convertToRaw(this.state.editorState.getCurrentContent())),
+        content: JSON.stringify(convertToRaw(clearedTwice)),
+        // content: JSON.stringify(convertToRaw(Modifier.removeInlineStyle(this.state.editorState.getCurrentContent(), saveSelection, 'BOLD'))),
         lastEditTime: Date.now()
       })
     })

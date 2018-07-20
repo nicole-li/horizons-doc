@@ -58,7 +58,7 @@ passport.use(new LocalStrategy(function(username, password, done) {
       }
       // if no user present, auth failed
       if (!user) {
-        console.log(user);
+        //console.log(user);
         return done(null, false, { message: 'Incorrect username.' });
       }
       // if passwords do not match, auth failed
@@ -77,8 +77,8 @@ app.use(passport.session());
 app.use('/', auth(passport));
 
 app.use('/', function(req, res, next){
-  console.log('middleware', req.user)
-  console.log('req.session', req.session)
+  // console.log('middleware', req.user)
+  // console.log('req.session', req.session)
   if(!req.user){
     res.json({
       success: false,
@@ -133,17 +133,25 @@ io.on('connection', (socket) => {
       if (res.numUser.length > 0) {
         console.log('@@socket.join', id)
         socket.join(id)
-        //console.log(res)
-        //res.update({ _id: id}, {
-      //    numUser: res.numUser++
-        //})
         User.findOne({username: username}, function(err, result){
           if(err){
             // socket.emit("Could not find User");
           }else{
             result.color=res.numUser[0];
-            res.numUser.shift();
+            console.log(username, '@@Color', result.color);
+            console.log('@@Array', res.numUser)
+            var shiftedArr = res.numUser.slice(1);
+            console.log('@@after assigned color', res.numUser)
             socket.emit('color', result.color);
+
+            //saving document
+            Document.findByIdAndUpdate(id, {numUser: shiftedArr}, (err1, result1) => {
+              if (err1) {
+                console.log('@@document color update error', err1)
+              } else {
+                console.log('@@color update success', username, result1.numUser)
+              }
+            })
           }
         })
       } else {
@@ -153,27 +161,24 @@ io.on('connection', (socket) => {
     })
   })
   //step 2 update sync
-  socket.on('sync', ({id, content,username}) => {
-    console.log("SYNC", id);
-    console.log("CONTENT", content);
+  socket.on('sync', ({id, content, username, otherUserColor, otherSelection}) => {
+    // console.log("SYNC", id);
+    // console.log("CONTENT", content);
     //console.log("DOC", doc);
-    socket.to(id).emit('update', {content, username})
+    socket.to(id).emit('update', {content, username, otherUserColor, otherSelection})
   })
 
-  socket.on('closeDocument', (docId, user) =>{
-    Document.findById(docId, (err, res)=>{
+  socket.on('closeDocument', ({docId, userColor}) =>{
+    Document.findById(docId, (err, docRes)=>{
+      console.log('@@closeDocument, user with color ' + userColor + ' closed ' + docRes.title)
       if(err){
         socket.emit('Error Closing the Document');
       }else{
-        res.numUser.push(user.color);
-        user.color = '';
+        var colArr = docRes.numUser.slice()
+        colArr.push(userColor)
+        Document.findByIdAndUpdate(docId, { numUser: colArr});
       }
     })
-  })
-
-  //selection and highlighting
-  socket.on('selection', ({selectionState, color, docId}) => {
-    socket.to(docId).emit('otherUserSelection', {selectionState, color})
   })
 })
 

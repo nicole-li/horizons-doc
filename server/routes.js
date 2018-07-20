@@ -20,10 +20,10 @@ router.post('/save/:id', (req, res) => {
         res.json({success:false})
         console.log("Selected Doc cannot be saved because it does not exist");
       }else{
-        console.log('save history test' , result);
+        //console.log('save history test' , result);
         var historyArr = result.history.slice();
         historyArr.push(result.content)
-        console.log(historyArr);
+        //console.log(historyArr);
         Document.findByIdAndUpdate(id, { history: historyArr}, function(error, docResult) {
           if(error) {
             res.json({success: false, error: error})

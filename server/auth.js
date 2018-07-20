@@ -12,7 +12,7 @@ module.exports = function (passport) {
 
   router.post('/register', function(req, res) {
     // validation step
-    console.log("Body for register", req.body);
+    //console.log("Body for register", req.body);
     User.findOne({username: req.body.username}, (err, result) => {
       if (result) {
         res.json({
@@ -62,8 +62,8 @@ module.exports = function (passport) {
 
   // POST Login page
   router.post('/login', passport.authenticate('local'), function(req, res) {
-    console.log('req.user', req.user)
-    console.log('req.session', req.session)
+    //console.log('req.user', req.user)
+    //console.log('req.session', req.session)
     res.json({
       success: true,
     });
