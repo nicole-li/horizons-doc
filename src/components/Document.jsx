@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 
-import Editor, { createEditorStateWithText } from 'draft-js-plugins-editor';
+//import Editor, { createEditorStateWithText } from 'draft-js-plugins-editor';
 
 import createToolbarPlugin, { Separator } from 'draft-js-static-toolbar-plugin';
 import {
@@ -17,17 +17,19 @@ import {
   CodeBlockButton
 } from 'draft-js-buttons';
 
-import {EditorState, RichUtils} from 'draft-js';
+import {Editor, EditorState, RichUtils, convertFromRaw, convertToRaw, SelectionState, ContentState} from 'draft-js';
 
 import ReactDOM from 'react-dom';
 import Modal from 'react-modal';
 import ScrollArea from 'react-scrollbar';
 
-import io from 'socket.io'
+
+import io from 'socket.io-client'
 
 class HeadlinesPicker extends Component {
   componentDidMount() {
     setTimeout(() => { window.addEventListener('click', this.onWindowClick); });
+
   }
 
   componentWillUnmount() {
@@ -35,9 +37,9 @@ class HeadlinesPicker extends Component {
   }
 
   onWindowClick = () =>
-    // Call `onOverrideContent` again with `undefined`
-    // so the toolbar can show its regular content again.
-    this.props.onOverrideContent(undefined);
+  // Call `onOverrideContent` again with `undefined`
+  // so the toolbar can show its regular content again.
+  this.props.onOverrideContent(undefined);
 
   render() {
     const buttons = [HeadlineOneButton, HeadlineTwoButton, HeadlineThreeButton];
@@ -53,10 +55,10 @@ class HeadlinesPicker extends Component {
 
 class HeadlinesButton extends Component {
   onClick = () =>
-    // A button can call `onOverrideContent` to replace the content
-    // of the toolbar. This can be useful for displaying sub
-    // menus or requesting additional information from the user.
-    this.props.onOverrideContent(HeadlinesPicker);
+  // A button can call `onOverrideContent` to replace the content
+  // of the toolbar. This can be useful for displaying sub
+  // menus or requesting additional information from the user.
+  this.props.onOverrideContent(HeadlinesPicker);
 
   render() {
     return (
@@ -102,52 +104,103 @@ Modal.setAppElement('#App');
 export default class CustomToolbarEditor extends Component {
   constructor(props) {
     super(props);
+    console.log('@@ constructor', props)
+    this.socket = io('http://localhost:3000'),
     this.state = {
-      socket: io('http://localhost:3000'),
       modalIsOpen: false,
       toUser: '',
-      title: this.props.doc['title']
+      title: this.props.doc['title'],
+      else: false,
+      selectionState: '',
+      editorState: EditorState.createEmpty(),
+      doc: props.doc
     };
-    if (this.props.doc['content'].length === 0) {
-      this.state.editorState = EditorState.createEmpty();
-    }
-    else {
-      this.state.editorState = createEditorStateWithText(this.props.doc['content'])
-    }
   }
 
-  componentDidMount = () {
-    this.state.socket.on('connect', () => {
+  componentDidMount = () => {
+    console.log('@@ componentDidMount')
+
+    fetch('http://localhost:3000/retrieve/'+ this.props.doc._id,
+    {credentials: 'same-origin'})
+    .then((res)=>res.json())
+    .then((res) => {
+      if (res.success) {
+        if (res.document.content.length === 0) {
+          this.setState({ editorState : EditorState.createEmpty()})
+        }
+        else {
+
+          this.setState({ editorState : EditorState.createWithContent(convertFromRaw(JSON.parse(res.document.content)))})
+        }
+      }else{
+        console.log("FETCH FAILED", res)
+      }
+
+      // this.socket.on('connect', () => {
       console.log('frontend connected');
-      // this.state.socket.emit('userJoined', this.props.user);
-      this.state.socket.emit('watchDoc', this.props.doc._id, this.props.user);
-      this.state.socket.on('update', (contentArray) => {
-        this.setState(editorState: createEditorStateWithText(contentArray))
-        this.save();
-      })
-      this.state.socket.on('joinRoomError', (error) =>
-        console.log('room full error' + error)
-      )
-    }
+      console.log("Document", res.document, this.props.user);
+      this.socket.emit('watchDoc', {id: res.document._id, username: this.props.user}, ()=>{
+
+        this.socket.on('update', ({content, username}) => {
+          console.log("@@update", content, username, this.props.user)
+
+          var newContent  = EditorState.createWithContent(convertFromRaw(content));
+          var selection= this.state.editorState.getSelection();
+
+          var newEditorState = EditorState.forceSelection(newContent, selection)
+
+
+          //this.save((convertToRaw(newEditorState.getCurrentContent())));
+          this.setState({editorState: newEditorState})
+        })
+      });
+      this.socket.on('joinRoomError', (error) => console.log('room full error', error))
+    })
+
+    setInterval(this.save, 30000);
+    //  })
   }
 
-  componentWillUnmount =() {
+  // componentWillUnmount =() => {
+  //   this.state.socket.off('watchDoc', this.remoteStateChange);
+  //   this.state.socket.emit('closeDocument', (this.props.doc._id, this.props.user));
+  // }
+  //
+  // remoteStateChange =(res) => {
+  //   this.setState({
+  //     editorState: EditorState.createWithContent(convertFromRaw(res.rawState))
+  //    });
+  // }
 
-    socket.off('watchDoc', this.remoteStateChange);
-    socket.emit('closeDocument', {docId: this.props.doc._id, this.props.user});
-  }
-
-  remoteStateChange =(res)=> {
-    this.setState({editorState:
-       EditorState.createWithContent(convertFromRaw(res.rawState))});
-  }
-
+  //this.save((convertToRaw(newEditorState.getCurrentContent())));
+  // setInterval(save, 30000);
 
   onChange = (editorState) => {
-    this.setState({
-      editorState,
+    //step 1
+    // if(this.state.else){
+    //   this.setState({else: false});
+    // }else{
+    console.log("On Change", editorState);
+
+    //passed in selection
+    var selection= editorState.getSelection();
+    this.setState({editorState: editorState}, ()=> {
+
+      this.socket.emit('sync', {id: this.state.doc._id,
+        content: convertToRaw(editorState.getCurrentContent()),
+        username: this.props.user
+      })
     });
-    this.state.socket.emit('sync', this.props.doc, this.state.editorState)
+    // editorState.getCurrentContent().getPlainText())
+
+    //}
+
+    // console.log("After Emit", editorState);
+    // console.log("eeeee", this.state.editorState.getCurrentContent().getPlainText());
+    // this.setState({
+    //   editorState: editorState,
+    // });
+    // this.state.socket.emit('sync', this.props.doc, this.state.editorState.getCurrentContent().getPlainText())
   };
 
   focus = () => {
@@ -155,14 +208,17 @@ export default class CustomToolbarEditor extends Component {
   };
 
   save = () => {
-    fetch('http://localhost:3000/save/'+this.props.doc.docId, {
+    // console.log("In Save")
+
+
+    fetch('http://localhost:3000/save/'+this.state.doc._id, {
       method: 'POST',
       headers: {
         "Content-Type": "application/json"
       },
       credentials: 'same-origin',
       body: JSON.stringify({
-        content: this.state.editorState,
+        content: JSON.stringify(convertToRaw(this.state.editorState.getCurrentContent())),
         lastEditTime: Date.now()
       })
     })
@@ -202,41 +258,41 @@ export default class CustomToolbarEditor extends Component {
   render() {
     return (
       <ScrollArea>
-      <div>
-        <h1>Document Editor</h1>
-        <div className="nav">
-          <button className="button" onClick={()=>{this.props.redirect('Home')}}>Home</button>
-          <button className="button" type='submit'onClick={this.openModal}>Share</button>
-        </div>
-        <input className="title" onChange={(e) => this.setState({title: e.target.value})} value={this.state.title}/>
+        <div>
+          <h1>Document Editor</h1>
+          <div className="nav">
+            <button className="button" onClick={()=>{this.props.redirect('Home')}}>Home</button>
+            <button className="button" type='submit'onClick={this.openModal}>Share</button>
+          </div>
+          <input className="title" onChange={(e) => this.setState({title: e.target.value})} value={this.state.title}/>
 
-        <Modal
-          isOpen={this.state.modalIsOpen}
-          onAfterOpen={this.afterOpenModal}
-          onRequestClose={this.closeModal}
-          style={customStyles}
-          contentLabel="Example Modal"
-        >
+          <Modal
+            isOpen={this.state.modalIsOpen}
+            onAfterOpen={this.afterOpenModal}
+            onRequestClose={this.closeModal}
+            style={customStyles}
+            contentLabel="Example Modal"
+            >
 
-          <h2 ref={subtitle => this.subtitle = subtitle}>Share</h2>
-          <form>
-            <input onChange={(e) => this.setState({toUser: e.target.value})} value={this.state.toUser}/>
-            <button onClick={this.share}>Share</button>
-            <button onClick={this.closeModal}>Cancel</button>
-          </form>
-        </Modal>
+              <h2 ref={subtitle => this.subtitle = subtitle}>Share</h2>
+              <form>
+                <input onChange={(e) => this.setState({toUser: e.target.value})} value={this.state.toUser}/>
+                <button onClick={this.share}>Share</button>
+                <button onClick={this.closeModal}>Cancel</button>
+              </form>
+            </Modal>
 
-        <Toolbar />
-        <div className='editor' onClick={this.focus}>
-          <Editor
-            editorState={this.state.editorState}
-            onChange={this.onChange}
-            plugins={plugins}
-            ref={(element) => { this.editor = element; }}
-          />
-        </div>
-      </div>
-      </ScrollArea>
-    );
+            <Toolbar />
+            <div className='editor' onClick={this.focus}>
+              <Editor
+                editorState={this.state.editorState}
+                onChange={this.onChange}
+                plugins={plugins}
+                ref={(element) => { this.editor = element }}
+              />
+            </div>
+          </div>
+        </ScrollArea>
+      );
+    }
   }
-}

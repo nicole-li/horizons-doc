@@ -39,7 +39,6 @@ export default class App extends React.Component {
       display: doc,
       currentPage: 'Document'
     })
-    console.log(this.state.display)
   }
 
   setUser(username) {

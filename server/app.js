@@ -17,9 +17,7 @@ var auth = require('./auth.js');
 
 var app = express();
 const server = require('http').Server(app);
-const io = require('socket.io')(server, {
-  pingInterval: 30000
-});
+const io = require('socket.io')(server);
 
 
 // app.use(express.static(path.join(__dirname, 'public')));
@@ -126,27 +124,39 @@ app.use(function(err, req, res, next) {
 
 
 io.on('connection', (socket) => {
-  console.log('connected');
+  console.log('connected backend');
 
   //check for number of users in a room
-  socket.on('watchDoc', (doc, user) =>{
-    Document.findById(doc._id, (error, res) => {
+  socket.on('watchDoc', ({id, username}, next) =>{
+    console.log('@@backend watchDoc fired ',id, username)
+    Document.findById(id, (error, res) => {
       if (res.numUser.length > 0) {
-        socket.join(doc._id)
-        res.update({ _id: doc._id}, {
-          numUser: res.numUser++
+        console.log('@@socket.join', id)
+        socket.join(id)
+        //console.log(res)
+        //res.update({ _id: id}, {
+      //    numUser: res.numUser++
+        //})
+        User.findOne({username: username}, function(err, result){
+          if(err){
+            // socket.emit("Could not find User");
+          }else{
+            result.color=res.numUser[0];
+            res.numUser.shift();
+          }
         })
-        user.color=res.numUser[0];
-        res.numUserValue.pop();
-
       } else {
         socket.emit('joinRoomError', 'room full, cannot join ')
       }
+      next();
     })
   })
-  //update sync
-  socket.on('sync', (doc, content) => {
-    io.to(doc._id).emit('update', content)
+  //step 2 update sync
+  socket.on('sync', ({id, content,username}) => {
+    console.log("SYNC", id);
+    console.log("CONTENT", content);
+    //console.log("DOC", doc);
+    socket.to(id).emit('update', {content, username})
   })
 
   socket.on('closeDocument', (docId, user) =>{
@@ -162,4 +172,4 @@ io.on('connection', (socket) => {
 })
 
 
-app.listen(process.env.PORT || 3000)
+server.listen(process.env.PORT || 3000)

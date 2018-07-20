@@ -10,6 +10,7 @@ export default class Login extends React.Component {
   }
 
   login = (e) => {
+    if(this.state.username && this.state.password){
     e.preventDefault();
     fetch('http://localhost:3000/login', {
       headers: {
@@ -33,6 +34,9 @@ export default class Login extends React.Component {
         alert('Could not Login.')
       }
     })
+  }else{
+    console.log("User must enter credentials to login")
+  }
   }
 
   render(){
