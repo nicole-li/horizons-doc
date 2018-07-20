@@ -6,7 +6,6 @@ import {EditorState, RichUtils} from 'draft-js';
 
 import ReactDOM from 'react-dom';
 import Modal from 'react-modal';
-import ScrollArea from 'react-scrollbar';
 import ColorPicker, { colorPickerPlugin } from 'draft-js-color-picker';
 
 const presetColors = [
