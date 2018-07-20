@@ -39,21 +39,32 @@ export default class Register extends React.Component {
   render(){
     return(
       <div className="pageContainer">
-        <h2 className="page1">Register</h2>
-        <div className="form">
-          <p>Username: <input
+        <h2 className="h2">Register</h2>
+        <div className="form-signin">
+          <input
+            placeholder="Enter Username"
+            className="form-control"
             onChange={(e)=> this.setState({username: e.target.value})}
-            value={this.state.username} name="username" type="text"/></p>
-          <p>Password: <input
+            value={this.state.username}
+            name="username"
+            type="text"/>
+          <input
+            className="form-control"
+            placeholder="Enter Password"
             onChange={(e)=> this.setState({password: e.target.value})}
-            value={this.state.password} name="password"type="text"/></p>
-          <p>*Password: <input
+            value={this.state.password}
+            name="password2"
+            type="password"/>
+          <input
+            className="form-control"
+            placeholder="Repeat Password"
             onChange={(e)=> this.setState({passwordRepeat: e.target.value})}
             value={this.state.passwordRepeat}
-            name="passwordRepeat" type="text"/></p>
-          <button onClick={this.register} className="button">Register</button>
+            name="passwordRepeat"
+            type="password"/>
+          <button onClick={this.register} className="btn btn-lg btn-primary btn-block">Register</button>
         </div>
-        <button className="button" onClick={()=>{this.props.redirect('Login')}}>Login</button>
+        <button className="btn btn-link" onClick={()=>{this.props.redirect('Login')}}>Login</button>
       </div>
     )
   }

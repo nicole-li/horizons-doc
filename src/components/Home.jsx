@@ -20,7 +20,8 @@ export default class Home extends React.Component {
     this.state={
       docs: [],
       modalIsOpen: false,
-      title: ''
+      title: '',
+      search: ''
     }
   }
 
@@ -72,8 +73,8 @@ export default class Home extends React.Component {
     .then(resp => resp.json())
     .then(json => {
       if (json.success) {
-        console.log('user: ', json.user);
-        console.log('doc: ', json.document);
+        // console.log('user: ', json.user);
+        // console.log('doc: ', json.document);
         this.props.display(json.document);
       }
       else {
@@ -95,6 +96,12 @@ export default class Home extends React.Component {
     this.setState({modalIsOpen: false});
   }
 
+  search = (e) => {
+    this.setState({
+      search: e.target.value
+    })
+  }
+
   render(){
     return(
       <div className="pageContainer">
@@ -103,8 +110,9 @@ export default class Home extends React.Component {
         <br/>
 
         <div className="nav">
-          <button className="button" onClick={this.logout}>Logout</button>
-          <button className="button" onClick={this.openModal}>New Document</button>
+          <button className="btn btn-light" onClick={this.logout}>Logout</button>
+          <button className="btn btn-light" onClick={this.openModal}>New Document</button>
+          <input style={{textAlign: 'center'}} onChange={this.search} type="text" placeholder="Search"/>
         </div>
 
         <br/>
@@ -117,16 +125,18 @@ export default class Home extends React.Component {
           contentLabel="Example Modal"
         >
 
-          <h3>Create New Document</h3>
-          <div>
-            <input onChange={(e) => this.setState({title: e.target.value})} value={this.state.title}/>
-            <button onClick={this.newDoc}>Create</button>
-            <button onClick={this.closeModal}>Cancel</button>
+          <h3 style={{textAlign: 'center'}}>Create New Document</h3>
+          <div className="nav">
+            <input style={{height: 'auto'}} onChange={(e) => this.setState({title: e.target.value})} value={this.state.title}/>
+            <button className="btn btn-light" onClick={this.newDoc}>Create</button>
+            <button className="btn btn-light" onClick={this.closeModal}>Cancel</button>
           </div>
         </Modal>
 
         <div className="docList">
-          {this.state.docs.map((doc) => <p onClick={()=>{this.displayDoc(doc)}}>{doc.title}</p>)}
+          {this.state.docs
+            .filter((doc) => doc.content.indexOf(this.state.search) > -1 || doc.title.indexOf(this.state.search) > -1)
+            .map((doc) => <p key={doc._id} onClick={()=>{this.displayDoc(doc)}}>{doc.title}</p>)}
         </div>
       </div>
     )
