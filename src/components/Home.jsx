@@ -105,7 +105,7 @@ export default class Home extends React.Component {
   render(){
     return(
       <div className="pageContainer">
-        <h1>Welcome Home, {this.props.user}</h1>
+        <h1>{this.props.user}</h1>
 
         <br/>
 
@@ -136,7 +136,10 @@ export default class Home extends React.Component {
         <div className="docList">
           {this.state.docs
             .filter((doc) => doc.content.indexOf(this.state.search) > -1 || doc.title.indexOf(this.state.search) > -1)
-            .map((doc) => <p key={doc._id} onClick={()=>{this.displayDoc(doc)}}>{doc.title}</p>)}
+            .map((doc) => <div className="form-signin form-control" key={doc._id} onClick={()=>{this.displayDoc(doc)}}>
+              <h6>{doc.title}</h6>
+              <p><span style={{fontWeight: 'bold'}}>Last Edited: </span>{new Date(doc.lastEditTime).toLocaleString()}</p>
+            </div>)}
         </div>
       </div>
     )
