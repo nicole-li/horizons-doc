@@ -1,12 +1,10 @@
 import React, { Component } from 'react';
-
-import Editor, { createEditorStateWithText } from 'draft-js-plugins-editor';
-
-import {EditorState, RichUtils} from 'draft-js';
-
+import {Editor, EditorState, RichUtils, convertFromRaw, convertToRaw, SelectionState, ContentState} from 'draft-js';
 import ReactDOM from 'react-dom';
 import Modal from 'react-modal';
 import ColorPicker, { colorPickerPlugin } from 'draft-js-color-picker';
+
+import io from 'socket.io-client'
 
 const presetColors = [
   '#ff00aa',
@@ -92,58 +90,119 @@ const styleMap = {
 export default class CustomToolbarEditor extends Component {
   constructor(props) {
     super(props);
+    console.log('@@ constructor', props)
+    this.socket = io('http://localhost:3000'),
     this.state = {
       modalIsOpen: false,
       toUser: '',
       title: this.props.doc['title'],
-      collaborators: []
+      else: false,
+      selectionState: '',
+      editorState: EditorState.createEmpty(),
+      doc: props.doc
     };
-    if (this.props.doc['content'].length === 0) {
-      this.state.editorState = EditorState.createEmpty();
-    }
-    else {
-      this.state.editorState = createEditorStateWithText(this.props.doc['content'].join())
-    }
-    this.onChange = (editorState) => this.setState({editorState});
     this.getEditorState = () => this.state.editorState;
     this.picker = colorPickerPlugin(this.onChange, this.getEditorState);
   }
 
-  componentDidMount() {
-    this.props.doc["collaboratorList"].map((id) => {
-      fetch('http://localhost:3000/collaborator/'+id, {
-        credentials: 'same-origin',
-      })
-      .then(resp => resp.json())
-      .then(json => {
-        if (json.success) {
-          // console.log('user: ', json.user);
-          this.setState({
-            collaborators: this.state.collaborators.concat([json.user])
-          })
+  componentDidMount = () => {
+    console.log('@@ componentDidMount')
+
+    fetch('http://localhost:3000/retrieve/'+ this.props.doc._id,
+    {credentials: 'same-origin'})
+    .then((res)=>res.json())
+    .then((res) => {
+      if (res.success) {
+        if (res.document.content.length === 0) {
+          this.setState({ editorState : EditorState.createEmpty()})
         }
         else {
-          console.log('Could not create display collaborators: ' + json.error);
+
+          this.setState({ editorState : EditorState.createWithContent(convertFromRaw(JSON.parse(res.document.content)))})
         }
-      })
+      }else{
+        console.log("FETCH FAILED", res)
+      }
+
+      // this.socket.on('connect', () => {
+      console.log('frontend connected');
+      console.log("Document", res.document, this.props.user);
+      this.socket.emit('watchDoc', {id: res.document._id, username: this.props.user}, ()=>{
+
+        this.socket.on('update', ({content, username}) => {
+          console.log("@@update", content, username, this.props.user)
+
+          var newContent  = EditorState.createWithContent(convertFromRaw(content));
+          var selection= this.state.editorState.getSelection();
+
+          var newEditorState = EditorState.forceSelection(newContent, selection)
+
+
+          //this.save((convertToRaw(newEditorState.getCurrentContent())));
+          this.setState({editorState: newEditorState})
+        })
+      });
+      this.socket.on('joinRoomError', (error) => console.log('room full error', error))
     })
+
+    setInterval(this.save, 30000);
+    //  })
   }
 
+  // componentWillUnmount =() => {
+  //   this.state.socket.off('watchDoc', this.remoteStateChange);
+  //   this.state.socket.emit('closeDocument', (this.props.doc._id, this.props.user));
+  // }
+  //
+  // remoteStateChange =(res) => {
+  //   this.setState({
+  //     editorState: EditorState.createWithContent(convertFromRaw(res.rawState))
+  //    });
+  // }
+
+  //this.save((convertToRaw(newEditorState.getCurrentContent())));
+  // setInterval(save, 30000);
+
   onChange = (editorState) => {
-    this.setState({
-      editorState,
+    //step 1
+    // if(this.state.else){
+    //   this.setState({else: false});
+    // }else{
+    console.log("On Change", editorState);
+
+    //passed in selection
+    var selection= editorState.getSelection();
+    this.setState({editorState: editorState}, ()=> {
+
+      this.socket.emit('sync', {id: this.state.doc._id,
+        content: convertToRaw(editorState.getCurrentContent()),
+        username: this.props.user
+      })
     });
+    // editorState.getCurrentContent().getPlainText())
+
+    //}
+
+    // console.log("After Emit", editorState);
+    // console.log("eeeee", this.state.editorState.getCurrentContent().getPlainText());
+    // this.setState({
+    //   editorState: editorState,
+    // });
+    // this.state.socket.emit('sync', this.props.doc, this.state.editorState.getCurrentContent().getPlainText())
   };
 
   save = () => {
-    fetch('http://localhost:3000/save/'+this.props.doc.docId, {
+    // console.log("In Save")
+
+
+    fetch('http://localhost:3000/save/'+this.state.doc._id, {
       method: 'POST',
       headers: {
         "Content-Type": "application/json"
       },
       credentials: 'same-origin',
       body: JSON.stringify({
-        content: this.state.editorState,
+        content: JSON.stringify(convertToRaw(this.state.editorState.getCurrentContent())),
         lastEditTime: Date.now()
       })
     })
@@ -228,7 +287,6 @@ export default class CustomToolbarEditor extends Component {
         >
 
           <h3>Share</h3>
-          {this.state.collaborators.map((user) => <p key={user._id}>{user.username}</p>)}
           <div className="nav">
             <input onChange={(e) => this.setState({toUser: e.target.value})} value={this.state.toUser}/>
             <button className="btn btn-light" onClick={this.share}>Share</button>
@@ -274,6 +332,6 @@ export default class CustomToolbarEditor extends Component {
           />
         </div>
       </div>
-    );
+      );
+    }
   }
-}

@@ -10,11 +10,15 @@ var LocalStrategy = require('passport-local').Strategy;
 var mongoose = require('mongoose');
 var models = require('./models.js');
 var User = models.User
+var Document = models.Document
 
 var routes = require('./routes.js');
 var auth = require('./auth.js');
 
 var app = express();
+const server = require('http').Server(app);
+const io = require('socket.io')(server);
+
 
 // app.use(express.static(path.join(__dirname, 'public')));
 
@@ -119,4 +123,53 @@ app.use(function(err, req, res, next) {
 });
 
 
-app.listen(process.env.PORT || 3000)
+io.on('connection', (socket) => {
+  console.log('connected backend');
+
+  //check for number of users in a room
+  socket.on('watchDoc', ({id, username}, next) =>{
+    console.log('@@backend watchDoc fired ',id, username)
+    Document.findById(id, (error, res) => {
+      if (res.numUser.length > 0) {
+        console.log('@@socket.join', id)
+        socket.join(id)
+        //console.log(res)
+        //res.update({ _id: id}, {
+      //    numUser: res.numUser++
+        //})
+        User.findOne({username: username}, function(err, result){
+          if(err){
+            // socket.emit("Could not find User");
+          }else{
+            result.color=res.numUser[0];
+            res.numUser.shift();
+          }
+        })
+      } else {
+        socket.emit('joinRoomError', 'room full, cannot join ')
+      }
+      next();
+    })
+  })
+  //step 2 update sync
+  socket.on('sync', ({id, content,username}) => {
+    console.log("SYNC", id);
+    console.log("CONTENT", content);
+    //console.log("DOC", doc);
+    socket.to(id).emit('update', {content, username})
+  })
+
+  socket.on('closeDocument', (docId, user) =>{
+    Document.findById(docId, (err, res)=>{
+      if(err){
+        socket.emit('Error Closing the Document');
+      }else{
+        res.numUser.push(user.color);
+        user.color = '';
+      }
+    })
+  })
+})
+
+
+server.listen(process.env.PORT || 3000)

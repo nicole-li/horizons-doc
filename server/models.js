@@ -13,6 +13,9 @@ var userSchema = new Schema({
   password: {
     type: String
   },
+  color:{
+    type: String
+  },
   docList: [{
     type: ObjectId,
     ref:'Document'
@@ -21,8 +24,10 @@ var userSchema = new Schema({
 
 var documentSchema = new Schema({
   content: {
-    type: Array,
-    default: []
+    type: String,
+  },
+  history:{
+    type: Array
   },
   owner: {
     type: ObjectId,
@@ -45,6 +50,10 @@ var documentSchema = new Schema({
   },
   lastEditTime: {
     type: Date
+  },
+  numUser:{
+    type: Array,
+    default: ["red", "blue", "green", "orange", "yellow", "purple"]
   }
 },
   {
