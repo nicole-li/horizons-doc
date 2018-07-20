@@ -34,11 +34,12 @@ export default class App extends React.Component {
   }
 
   display(doc) {
-    console.log(doc)
+    // console.log(doc)
     this.setState({
       display: doc,
       currentPage: 'Document'
     })
+    // console.log(this.state.display)
   }
 
   setUser(username) {
@@ -48,7 +49,7 @@ export default class App extends React.Component {
   render(){
     return(
       <div>
-        {this.state.currentPage === "Home" ? <Home redirect={this.redirect} display={this.display}/> : null}
+        {this.state.currentPage === "Home" ? <Home user={this.state.username} redirect={this.redirect} display={this.display}/> : null}
         {this.state.currentPage === "Login" ? <Login redirect={this.redirect} setUser={this.setUser}/> : null}
         {this.state.currentPage === "Document" ? <Document user={this.state.username} doc={this.state.display} redirect={this.redirect}/> : null}
         {this.state.currentPage === "Register" ? <Register redirect={this.redirect}/> : null}
