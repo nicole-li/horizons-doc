@@ -86,7 +86,7 @@
     "react-scrollbar": "^0.5.6",
     "react-scrollbars": "0.0.5",
     "socket.io-client": "^2.2.0",
-    "underscore": "^1.9.1"
+    "underscore": "^1.12.1"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
